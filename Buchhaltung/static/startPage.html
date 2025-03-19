@@ -1,0 +1,43 @@
+<html>
+    <head>
+        <title>Startseite</title>
+        <script src = "startPage.js" async></script>
+        <link rel="stylesheet" href="startPage.css">
+    </head>
+    <body onload="poll()">
+        <h1 class ="titel">Willkommen auf der Startseite</h1>
+        <div id="containerStudents">
+        </div>
+        <div id ="Sammeleintrag" class="input">
+            <h3>Sammeleintrag</h3>
+            <input placeholder="Name" id = "name"></input>
+            <input placeholder="Preis" type="number" id="price"></input>
+            <button onclick="toggleList('dropdown-class')">Klasse</button>
+            <button onclick="toggleList('dropdown-student')">Schüler</button>
+            <form id="dropdown-class">
+                <select id = "class-selection" width=300 style="width: 350px" size="8">
+                </select>
+            </form>
+            <form id="dropdown-student">
+                <select id = "student-selection" width=300 style="width: 350px" size="8" multiple>
+
+                </select>
+            </form>
+            <button onclick="sendSammeleintrag()">ok</button>
+        </div>
+        <div id = "newStudent" class="input">
+            <h3>Schüler löschen oder hinzufügen</h3>
+            <button onclick="toggleList('dropdown-newStudent')">Klasse</button>
+            <input placeholder="Name des Schülers" id ="newStudentName"></input>
+            <form id = "dropdown-newStudent">
+                <select id = "newStudent-selection" width=300 style="width: 350px" size="8">
+                </select>
+            </form>
+            <input type="checkbox" id="deleteStudent">Schüler löschen</input>
+            <button onclick="sendNewStudent()">ok</button>
+        </div> 
+        <div id = "options">
+            <button onclick="LogOut()">LogOut</button>
+        </div>
+    </body>
+</html>

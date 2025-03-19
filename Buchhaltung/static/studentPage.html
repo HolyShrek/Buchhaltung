@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Student</title>
+        <link rel="stylesheet" href="studentPage.css">
+    </head>
+    <script>
+        const url = "http://localhost:8080/";
+        function getUserId(){
+            const url= decodeURI(window.location.href);
+            const splitUrl = url.split("/");
+            return(splitUrl[4]);
+        }
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function poll1(){
+            const id =getUserId();
+            getInvoices(id);
+            await sleep(1000);
+            poll1();
+        }
+        async function getInvoices(id){
+            const response= await fetch(url + "studentAccount/invoices/"+id);
+            const invoice = await response.json();
+            displayInvoice(invoice);
+        }
+        function displayInvoice(data){
+            const tableBody= document.querySelector("#tableStudent tBody");
+            tableBody.innerHTML="";
+            data.invoice.forEach(item =>{
+                const row = document.createElement("tr"); //erstellt Reihe
+                //Name hinzufügen
+                const pointName = document.createElement("td");
+                const textName = document.createTextNode(item.name);
+                pointName.appendChild(textName);
+                //Preis Hinzufügen
+                const pointPreis = document.createElement("td");
+                const textPreis = document.createTextNode(item.price);
+                pointPreis.className = "number";
+                pointPreis.appendChild(textPreis);
+                //Datum hinzufügen
+                const pointDatum = document.createElement("td");
+                const textDatum = document.createTextNode(item.date);
+                pointDatum.appendChild(textDatum);
+                //Neue Reihe füllen
+
+                row.appendChild(pointName);
+                row.appendChild(pointPreis);
+                row.appendChild(pointDatum);
+                tableBody.appendChild(row);
+            })
+            const saldo = document.getElementById("saldo");
+            saldo.textContent="Total:" + data.saldo +"Fr.";
+
+        }
+        async function newInvoice(){
+            const invoice = {};
+            const ElementName = document.getElementById("newInvoiceName");
+            const ElementPrice = document.getElementById("newInvoicePrice");
+            if(ElementName.value == ""){
+                console.log("nicht genügend Daten");
+                return;
+            }
+            //idee mit Post von Chatgpt
+            invoice.name = ElementName.value;
+            invoice.price = ElementPrice.value;
+            invoice.studentId = getUserId();
+            console.log(invoice);
+
+            const response = await fetch(url+"newStudentInvoice",{
+                method: "POST",
+                headers:{
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(invoice)
+            });
+            const verdict = await response.text();
+            console.log(verdict);   
+        }
+        async function deleteInvoice(){
+            console.log("x");
+            const ElementName = document.getElementById("deleteInvoiceName");
+            const ElementResponse = document.getElementById("responseDeleteInvoice");
+            const name = ElementName.value;
+            if(name ==""){
+                return;
+            }
+            const studentId = getUserId();
+            const response = await fetch(url + "deleteStudentInvoice/" +name +"/" + studentId);
+            const verdict = await response.text();
+            console.log(verdict);
+            ElementResponse.textContent = verdict;
+            await sleep(500);
+            ElementResponse.textContent = "";
+        }
+    </script>
+    <style>
+        html{
+            font-family: system-ui;
+        }
+        #containerStudent{
+            border-radius: 1em;
+            border-style: solid;
+            padding: 1em;
+            margin: auto auto;
+            width:fit-content;
+            align-self: center;
+            background-color: whitesmoke;
+        }
+        .update{
+            border-radius: 1em;
+            border-style: solid;
+            padding: 1em;
+            margin: auto auto;
+            width:fit-content;
+            align-self: center;
+            background-color: whitesmoke;
+        }
+        body{
+            background-color: gray;
+            margin: auto, auto;
+        }
+    </style>
+    <body onload="poll1()">
+        <div id = "containerStudent">
+            <table id = "tableStudent" class = "Klassensalden">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Betrag</th>
+                        <th>Datum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <p id = "saldo"></p>
+        </div>
+
+        <div id = "newInvoice", class = "update">
+            <h3>Neue Buchung</h3>
+            <input placeholder="Name" id = "newInvoiceName"></input>
+            <input placeholder="Preis positiv=>Gutschrift" id = "newInvoicePrice" onchange = "newInvoice()" type = "number"></input>
+        </div>
+        <div id = "deleteInvoice" class = "update">
+            <h3>Buchung löschen</h3>
+            <input placeholder="Name" id = "deleteInvoiceName" onchange="deleteInvoice()" ></input>
+            <p id = "responseDeleteInvoice"></p>
+        </div>
+    </body>
+</html>

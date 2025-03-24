@@ -1,0 +1,54 @@
+html{
+    background: linear-gradient(0.25turn, #f5ff66, rgb(63, 63, 238));
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+#containerDropdown{
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+details{
+    display: inline-block;
+    width: 255x;
+    background-color: rgb(50, 51, 71);
+    color: white;
+    cursor: pointer;
+}
+summary {
+    padding: 6px;
+    width: 255px;
+    background-color: rgb(50, 51, 71);
+    color: white;
+    cursor: pointer;
+}
+details[open] > summary::marker{
+    color: rgb(150, 201, 235);
+}
+summary:focus,
+summary:hover,
+summary:active{
+    box-shadow: 0px 0px 2px 2px rgb(150, 201, 235);
+}
+ul {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+    margin-top: 2px;
+    border: 1px solid var(--dk-gray);
+    box-shadow: 0 0 5px 1px var(--lt-gray);
+}
+li {
+    margin: 0px;
+    padding: 0px;
+}
+li > label {
+    cursor: pointer;
+    display: inline-block;
+    width: 100%;
+}
+li > label:hover,
+li > label:has(input:checked){
+    background-color: rgb(170, 232, 241);
+    border: 1px solid rgb(84, 124, 119);
+    color: white;
+}

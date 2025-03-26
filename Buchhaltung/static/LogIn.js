@@ -1,4 +1,4 @@
-const url= "http://localhost:8080/"
+const url= "http://localhost:8080/";
 
 async function LogInHandler(){
     let answer = document.getElementById("answer");

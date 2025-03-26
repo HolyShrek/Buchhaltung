@@ -3,12 +3,11 @@ import express from 'express';
 import mariadb from 'mariadb';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import cookieParser from 'cookie-parser'
+import cookieParser from 'cookie-parser';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
 const port = 8080;
-let User= "henrik.baumgartner";
 const pool = mariadb.createPool({
   host: "127.0.0.1", 
   port: 3306,
@@ -23,16 +22,31 @@ let userlist = [];
 
 
 app.use(express.static('static')); //benutz den static ordner
-app.use(cookieParser());
+app.use(cookieParser()); //cookies
 app.use(express.json());
+/*
+* @param {number} n
+* @return {object} userid
+* @error {sring} unknownUser
+*
+* kriegt cookie und schaut ob er schon existiert wird unkownUser returend
+*
+*/
 function getUserByCookie(cookie){
     const user = userlist.find(item => item.id == cookie);
     if (user) {
-        console.log(user.accountantId);
         return user.accountantId;
     }
     return "unknownUser";
 }
+/*
+* @param {string} id
+* @param {string} UserName$
+* @return {bool}
+*
+*checkt ob der user Access auf den Student hat
+*
+*/
 async function testStudent(id, userName){
     try{
         const classes = await pool.query("select class_name as class from accountant_has_class where accountant_idAccountant = ?", userName);
@@ -48,6 +62,14 @@ async function testStudent(id, userName){
         return false
     }
 }
+/*
+* @param {string} name
+* @param {string} UserName
+* @return {bool}
+*
+*checkt ob der user Access auf die Klasse hat
+*
+*/
 async function testClass(name, userName){
     try{
         const classes = await pool.query("select class_name as class from accountant_has_class where accountant_idAccountant = ?", userName);
@@ -61,6 +83,7 @@ async function testClass(name, userName){
         return false
     }
 }
+
 async function getStudentId(studentName) { // holt die Id von Schüler anhand von namen
     //TO-DO Protokoll wenn es zwei mögliche Schüler gibt
     const id = await pool.query("SELECT IdStudent FROM student WHERE name = ?", studentName);
@@ -98,6 +121,30 @@ async function getStudentNamesSaldo(students) {
         throw err;
     }
 }
+async function getEveryInvoice(students) {
+    let returnArray = [];
+    try{
+        for(const item of students){
+            const invoices = await pool.query("select name, price, date_format(date, '%d-%m-%Y') as date, idInvoice from student_has_invoice right join invoice on student_has_invoice.invoice_idInvoice = invoice.idInvoice where student_idStudent= ? ", item.idStudent);
+            invoices.forEach(item => {
+                const index = returnArray.findIndex(index => index.id == item.idInvoice);
+                console.log(index);
+                if(index == -1){
+                    returnArray.push({
+                        name:item.name,
+                        price:item.price,
+                        date:item.date,
+                        id: item.idInvoice
+                    })
+                }
+            });
+        }
+        return returnArray;
+
+    } catch (err){
+        throw err;
+    }
+}
 
 app.get('/logIn/:AccountantName/:AccountantPassword',async (req, res) => {
     //const userId = getUserId(req, res);
@@ -109,7 +156,6 @@ app.get('/logIn/:AccountantName/:AccountantPassword',async (req, res) => {
         const jsonArray = await pool.query("select Password, idAccountant from accountant where name = ? ", [Name])// checkt ob name und Passwort übereinstimmen
         const rightPassword = jsonArray[0].Password;
         if(rightPassword == Password){
-            User=Name; //veraltet
             if(userlist.some(item => item.name === Name) == false){
             let userid = getUserId(req, res);
             userlist.push({"accountantId": jsonArray[0].idAccountant, "id": userid});
@@ -134,9 +180,12 @@ app.get('/students/Saldo', async (req, res)=>{
         for(const item of classes){
             const students = await pool.query("select idStudent from student where class_name = ?", item.class);
             const NameSaldo =  await getStudentNamesSaldo(students);
+            const everyInvoice = await getEveryInvoice(students);
+            console.log(everyInvoice);
             returnJson.push({
                 name: item.class, 
                 data: NameSaldo,
+                invoices: everyInvoice
             })
         }
         return res.json(returnJson);
@@ -210,11 +259,11 @@ app.get('/deleteStudentInvoice/:name/:studentId', async(req, res)=>{
     }
 });
 app.get('/LogOut', async(req, res)=>{
-    /*
     const cookie = req.cookies.userid;
-    const index = userlist.indexOf(item => item.id == cookie);
-    delete userlist[index];
-    */
+    const index = userlist.findIndex(item => item.id == cookie); // Use findIndex()
+    if (index !== -1) { 
+        userlist.splice(index, 1); 
+    }
     res.send("test");
 });
 
@@ -236,10 +285,17 @@ app.get('/newStudent/:name/:class', async (req, res) =>{
     console.log(InsertStudent.insertId);
 });
 app.get('/deleteStudent/:name', async (req, res) =>{
+    console.log("test");
     const name = req.params.name;
     const studentId = await getStudentId(name);
-    console.log(studentId);
-
+    //security
+    let userid = req.cookies.userid
+    const userName = getUserByCookie(userid);
+    const acsess = await testStudent(studentId, userName);
+    if(!acsess){
+        return res.status(401).send("Unauthorized: No user ID");
+    }
+    //sql
     const Invoices = await pool.query("select invoice_idInvoice as id from student_has_invoice where student_idStudent = ?", studentId);
     const deleteConection = await pool.query("delete from student_has_invoice where student_idStudent = ?", studentId);
     for(const invoice of Invoices){
@@ -257,6 +313,13 @@ app.get('/deleteStudent/:name', async (req, res) =>{
 
 app.post('/newStudentInvoice',  async(req, res)=>{
    //TODO: Security
+   let userid = req.cookies.userid
+   const userName = getUserByCookie(userid);
+   if(userName == "unknwonUser"){
+       res.status(403);
+       return;
+   }
+   //sql
    let receivedData = req.body;
    receivedData.date = new Date();
    console.log(receivedData);
@@ -267,15 +330,35 @@ app.post('/newStudentInvoice',  async(req, res)=>{
    res.send("Hallo");
 });
 app.post('/Sammeleintrag', async(req, res)=>{
+    let userid = req.cookies.userid
+    const userName = getUserByCookie(userid);
+    if(userName == "unknwonUser"){
+        res.status(403);
+        return;
+    }
+    //sql
     const receivedData = req.body;
     receivedData.date = new Date();   
     const InsertInvoice = await pool.query("insert into invoice (name, price, date) values (?,?,?)", [receivedData.name, receivedData.price, receivedData.date]);
     for(const student of receivedData.student){
-        const id = await getStudentId(student);
-        const insertConnection = await pool.query("insert into student_has_invoice (student_idStudent, invoice_idInvoice) values (?,?)", [id, InsertInvoice.insertId]) 
+        const insertConnection = await pool.query("insert into student_has_invoice (student_idStudent, invoice_idInvoice) values (?,?)", [student, InsertInvoice.insertId]) 
     }
     res.send("update Successfull");
 });
+
+app.post('/createAccount', async(req, res)=>{
+    const receivedData=req.body;
+    const insertAccounant = await pool.query("insert into accountant (name, password) values (?, ?)", [receivedData.name, receivedData.password]);
+    if(insertAccounant.insertId ==  0){
+        res.send("Failed to add student");
+        return;
+    }
+    for(const item of receivedData.calsses){
+        const insertConnection = await pool.query("insert into accountant_has_class (class_name, accountant_idAccountant) values (?,?)", [item.name, insertAccounant.insertId]);
+    }
+    res.send("creation of new accountant succesfull");
+});
+
 
 
 
@@ -290,6 +373,4 @@ app.listen(port, () => {
 
 //TODO
 
-//LogOut
-//SignUp
 // Kurs Wechsel

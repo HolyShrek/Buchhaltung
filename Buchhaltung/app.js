@@ -346,18 +346,15 @@ app.post('/Sammeleintrag', async(req, res)=>{
     res.send("update Successfull");
 });
 
-app.post('/createAccount', async(req, res)=>{
-    const receivedData=req.body;
-    const insertAccounant = await pool.query("insert into accountant (name, password) values (?, ?)", [receivedData.name, receivedData.password]);
-    if(insertAccounant.insertId ==  0){
-        res.send("Failed to add student");
-        return;
+app.post('/newAccountant', async(req, res)=>{
+    const receivedData = req.body;
+    const InsertAccountant = await pool.query("insert into accountant (name, password) values (?, ?)", [receivedData.name, receivedData.password]);
+    for(const classElement of receivedData.class){
+        const InsertConnection = await pool.query("insert into  accountant_has_class (accountant_idAccountant, class_name) values (?, ?)", [InsertAccountant.insertId, classElement])
     }
-    for(const item of receivedData.calsses){
-        const insertConnection = await pool.query("insert into accountant_has_class (class_name, accountant_idAccountant) values (?,?)", [item.name, insertAccounant.insertId]);
-    }
-    res.send("creation of new accountant succesfull");
-});
+   res.send("update Successfull");
+
+})
 
 
 

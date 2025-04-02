@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <title>Account erstellen</title>
+        <script src ="createAccountant.js" async></script>
+    </head>
+    <body onload="poll()">
+        <div class="input">
+            <input placeholder="Name" id="accountantName" type="text"></input>
+            <input placeholder="Passwort" id="accountantPassword" type="password"></input>
+        </div>
+
+        <details id="class-selection">
+            <summary>class-selection</summary>
+            <ul>
+            </ul>
+        </details>
+        <button onclick="createAccount()" id="create">Account erstellen</button>
+        <p id="response"></p>
+        <button onclick="back()" id="back">zurück</button>
+    </body>
+</html>

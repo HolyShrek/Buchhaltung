@@ -9,27 +9,6 @@ async function poll() {
     displayClassSelector();
 }
 
-/*
-function toggleList(id){
-    const dropdown = document.getElementById(id);
-    if (dropdown.style.display === "none" || dropdown.style.display === "") {
-        dropdown.style.display = "block";
-        displayClassSelector();
-
-    }
-}
-
-function displayClassSelector(){
-    const dropdown = document.getElementById("class-selection");
-    dropdown.innerHTML="";
-    studentdata.forEach(item =>{
-        const point =  document.createElement("option");
-        const text = document.createTextNode(item.name);
-        point.appendChild(text);
-        point.value= item.name;
-        dropdown.appendChild(point);
-    })
-}*/
 function displayClassSelector(){
     const details = document.getElementById("class-selection");
     const ul = details.querySelector("ul");

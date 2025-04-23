@@ -4,7 +4,11 @@
         <link rel="stylesheet" href="startPage.css">
     </head>
     <script src = "startPage.js" async></script>
-    <body onload="poll()">
+    <script src = "sidebar/sidebar.js" async></script>
+    <script src = "header/header.js" async></script>
+    <script src = "basics.js" async></script>
+    <body onload="init()">
+        <div id = "sidebarContainer"></div>
         <h1 class ="titel">Willkommen auf der Startseite</h1>
         <div id="containerStudents">
             <div class="class-sidebar">
@@ -14,11 +18,22 @@
             </div>
             <div class = "Klassensalden"></div>
             <div class = "everyInvoice"></div>
+            <div class = container-inputs>
+                <button onclick="ToggleInput('newStudent')">Schüler Hinzufügen</button>
+                <button onclick="ToggleInput('Sammeleintrag')">Sammeleintrag</button>
+                <button onclick="ToggleInput('currencyCalculater')">Währungs Umrechnung</button>
+            </div>
         </div>
         <div id ="Sammeleintrag" class="input">
             <h3>Sammeleintrag</h3>
             <input placeholder="Name" id = "name"></input>
             <input placeholder="Preis" type="number" id="price"></input>
+            <select>
+                <option>CHF</option>
+                <option>EUR</option>
+                <option>GBP</option>
+                <option>USD</option>
+            </select>
             <details id="class-selection">
                 <summary>class-selection</summary>
                 <ul>
@@ -31,25 +46,22 @@
             </details>
             <button onclick="sendSammeleintrag()">ok</button>
         </div>
-        <div id = "newStudent" class="input">
-            <h3>Schüler löschen oder hinzufügen</h3>
+        <div id = "newStudent" class = "input">
+            <h3>Schüler hinzufügen</h3>
             <details id ="newStudent-selection">
-                <summary>student-selection</summary>
+                <summary>class-selection</summary>
                 <ul>
                 </ul>
             </details>
             <input id="newStudentName", placeholder="Name">
-            <label><input type="checkbox" id="deleteStudent">Schüler löschen </label>
             <button onclick="sendNewStudent()">ok</button>
         </div> 
-        <div id = "options">
-            <button onclick="LogOut()">LogOut</button>
-        </div>
         <div id="currencyCalculater" class = "input">
             <h3>Umrechnung Euro Franken</h3>
             <input placeholder="Betrag in Franken" type="number"></input>
             <button onclick="calculateCurrency()">calculate</button>
             <p id = "EuroSwiss"></p>
         </div>
+        <div id="headerContainer"></div>
     </body>
 </html>

@@ -1,6 +1,7 @@
 //lädt Bibliotheken und Datenbank
 import express from 'express';
 import mariadb from 'mariadb';
+import puppeteer from 'puppeteer';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import cookieParser from 'cookie-parser';
@@ -24,6 +25,9 @@ let userlist = [];
 app.use(express.static('static')); //benutz den static ordner
 app.use(cookieParser()); //cookies
 app.use(express.json());
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 /*
 * @param {number} n
 * @return {object} userid
@@ -128,7 +132,6 @@ async function getEveryInvoice(students) {
             const invoices = await pool.query("select name, price, date_format(date, '%d-%m-%Y') as date, idInvoice from student_has_invoice right join invoice on student_has_invoice.invoice_idInvoice = invoice.idInvoice where student_idStudent= ? ", item.idStudent);
             invoices.forEach(item => {
                 const index = returnArray.findIndex(index => index.id == item.idInvoice);
-                console.log(index);
                 if(index == -1){
                     returnArray.push({
                         name:item.name,
@@ -181,7 +184,6 @@ app.get('/students/Saldo', async (req, res)=>{
             const students = await pool.query("select idStudent from student where class_name = ?", item.class);
             const NameSaldo =  await getStudentNamesSaldo(students);
             const everyInvoice = await getEveryInvoice(students);
-            console.log(everyInvoice);
             returnJson.push({
                 name: item.class, 
                 data: NameSaldo,
@@ -208,7 +210,7 @@ app.get('/studentAccount/invoices/:id',  async(req, res)=>{
         }
         //Sql
         let response = {};//json für Antwort
-        const invoice = await pool.query("select name, price, date_format(date, '%d-%m-%Y') as date from student_has_invoice right join invoice on student_has_invoice.invoice_idInvoice = invoice.idInvoice where student_idStudent= ? ", id);
+        const invoice = await pool.query("select name, price, date_format(date, '%d-%m-%Y') as date, idInvoice as id from student_has_invoice right join invoice on student_has_invoice.invoice_idInvoice = invoice.idInvoice where student_idStudent= ? ", id);
         const saldo = await pool.query("select sum(price) as s from student_has_invoice right join invoice on student_has_invoice.invoice_idInvoice = invoice.idInvoice where student_idStudent= ? ", id);
         response.invoice = invoice;
         response.saldo= saldo[0].s;
@@ -220,11 +222,13 @@ app.get('/studentAccount/invoices/:id',  async(req, res)=>{
 });
 
 app.get('/studentAccount/:student',  async(req, res)=>{
-    res.sendFile(__dirname + '/static/studentPage.html');// gibt vielleicht noch besseren weg
+    const studentId = req.params.student;
+    res.sendFile(__dirname + '/static/studentPage/studentPage.html');// gibt vielleicht noch besseren weg
+    //res.redirect("/studentPage.html").send(studentId);
 });
 app.get('/deleteStudentInvoice/:name/:studentId', async(req, res)=>{
     //set parameter
-    const name = req.params.name;
+    const id = req.params.name;
     const studentId = req.params.studentId;
     //security
     let userid = req.cookies.userid
@@ -235,6 +239,7 @@ app.get('/deleteStudentInvoice/:name/:studentId', async(req, res)=>{
         return;
     }
     //sql
+    /*
     const idInvoiceArray = await pool.query("select idInvoice from invoice where name = ?", name);//alle Rechnungen mit diesem Name
     console.log(idInvoiceArray.length);
     if(idInvoiceArray.length == 0){
@@ -242,21 +247,36 @@ app.get('/deleteStudentInvoice/:name/:studentId', async(req, res)=>{
         return;
     }
     const idInvoice =idInvoiceArray[0].idInvoice;
+    */
     //delete
-    const deleteConection = await pool.query("delete from student_has_invoice where invoice_idInvoice = ? and student_idStudent=?", [idInvoice, studentId]);// checkt ob auch connection zwischen Schüler und Rechnung besteht
+    const deleteConection = await pool.query("delete from student_has_invoice where invoice_idInvoice = ? and student_idStudent=?", [id, studentId]);// checkt ob auch connection zwischen Schüler und Rechnung besteht
     //check if Invoice is still in use
     console.log(deleteConection);
     if(deleteConection.affectedRows == 0){
         res.send("Diese Rechnung gibt es nicht");
         return;
     }else{
-        const check = await pool.query("select * from student_has_invoice where invoice_idInvoice = ?", idInvoice); // checkt ob die Rechnung noch wo anders gebraucht wird
+        const check = await pool.query("select * from student_has_invoice where invoice_idInvoice = ?", id); // checkt ob die Rechnung noch wo anders gebraucht wird
         let deleteInvoice= [];
         if(check.length == 0){
-            deleteInvoice = await pool.query("delete from invoice where idInvoice = ?", idInvoice); // löscht Rechnung, wenn sie unnötig ist
+            deleteInvoice = await pool.query("delete from invoice where idInvoice = ?", id); // löscht Rechnung, wenn sie unnötig ist
         }
         res.send("Löschung erfolgreich");
     }
+});
+
+app.get('/deleteClassInvoice/:id/:className', async(req,res) =>{
+    const id = req.params.id;
+    const className = req.params.className;
+    const students = await pool.query("select idStudent from student where class_name = ?", className);
+    for(const student of students){
+        await pool.query("delete from student_has_invoice where invoice_idInvoice = ? and student_idStudent=?", [id, student.idStudent]);
+    }
+    const connections = await pool.query("select * from student_has_invoice where invoice_idInvoice = ?", id);
+    if(connections.length == 0){
+        await pool.query("delete from invoice where idInvoice = ?", id);
+    }
+    res.send("all good");
 });
 app.get('/LogOut', async(req, res)=>{
     const cookie = req.cookies.userid;
@@ -284,10 +304,9 @@ app.get('/newStudent/:name/:class', async (req, res) =>{
     const InsertStudent = await pool.query("insert into student (name,class_name) values (?, ?)", [name, classes]);
     console.log(InsertStudent.insertId);
 });
-app.get('/deleteStudent/:name', async (req, res) =>{
+app.get('/deleteStudent/:id', async (req, res) =>{
     console.log("test");
-    const name = req.params.name;
-    const studentId = await getStudentId(name);
+    const studentId = req.params.id;
     //security
     let userid = req.cookies.userid
     const userName = getUserByCookie(userid);
@@ -310,13 +329,49 @@ app.get('/deleteStudent/:name', async (req, res) =>{
     console.log(deleteStudent);
     res.send("all good");
 });
+/*
+* export
+*
+*
+*
+*/
+app.get('/export/:id', async(req, res) =>{
+    const id =req.params.id;
+    let userId = req.cookies.userid;
+    //https://pptr.dev/
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setCookie({
+        name: 'userid',
+        value: userId,
+        domain: 'localhost', // Ensure it matches the domain you're using
+        path: '/',
+      });
+    await page.goto('http://localhost:8080/studentAccount/'+id, {waitUntil: 'domcontentloaded'});
+    await page.waitForSelector('#containerStudent');
+    //vielleicht extra Selector in html page hinzufügen wenn Daten geladen sind wär schneller und sicherer
+    await sleep(1000);
+    //stackOverflow
+    const pdfBuffer = await page.pdf({
+        path: 'clean-table.pdf',
+        format: 'A4',
+        printBackground: true
+      });    
+    await browser.close();
+    res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="student-${id}.pdf"`,
+        'Content-Length': pdfBuffer.length
+      });
+      res.end(pdfBuffer);
+})
 
 app.post('/newStudentInvoice',  async(req, res)=>{
-   //TODO: Security
+   //Security
    let userid = req.cookies.userid
    const userName = getUserByCookie(userid);
    if(userName == "unknwonUser"){
-       res.status(403);
+       res.status(403).send("acsess denied");
        return;
    }
    //sql
@@ -338,7 +393,12 @@ app.post('/Sammeleintrag', async(req, res)=>{
     }
     //sql
     const receivedData = req.body;
+    if(receivedData.name == "" || receivedData.price == "" || receivedData.student == ""){
+        res.send("Fehler ungenügende Daten");
+        return;
+    }
     receivedData.date = new Date();   
+    console.log(receivedData);
     const InsertInvoice = await pool.query("insert into invoice (name, price, date) values (?,?,?)", [receivedData.name, receivedData.price, receivedData.date]);
     for(const student of receivedData.student){
         const insertConnection = await pool.query("insert into student_has_invoice (student_idStudent, invoice_idInvoice) values (?,?)", [student, InsertInvoice.insertId]) 

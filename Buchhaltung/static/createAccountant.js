@@ -1,6 +1,16 @@
 const url= "http://localhost:8080/"
 let studentdata;
 
+async function digestMessage(message) {//hasch für Passwort
+    const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8); // hash the message
+    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join(""); // convert bytes to hex string
+    return hashHex;
+  }
+
 async function poll() {
     const responseSaldo = await fetch(url+"students/Saldo");
     const data = await responseSaldo.json();
@@ -29,6 +39,7 @@ function displayClassSelector(){
 
 
 async function createAccount(){
+    const wrapper = document.querySelector(".wrapper");
     const ElementName = document.getElementById("accountantName");
     const ElementPassword = document.getElementById("accountantPassword");
     const Success = document.getElementById("response");
@@ -42,7 +53,11 @@ async function createAccount(){
     let postJson = {};
     postJson.class = classes;
     postJson.name = ElementName.value;
-    postJson.password = ElementPassword.value;
+    if(ElementPassword.value != wrapper.querySelector("input[placeholder='PasswortBestätigen']").value){
+        Success.textContent="Falsches Passwort";
+        return;
+    }
+    postJson.password = await digestMessage(ElementPassword.value);
 
     const response = await fetch(url + "newAccountant",{
         method: "POST",
@@ -56,13 +71,9 @@ async function createAccount(){
     if(verdict == "update Successfull"){
         ElementName.value = "";
         ElementPassword.value = "";
+        wrapper.querySelector("input[placeholder='PasswortBestätigen']").value= "";
         NewAccount.textContent = "Neuer Account erstellen";
         Success.textContent = "Accountant erfolgreich erstellt.";
 
     }
-
-}
-
-function back(){
-    window.location.href= "startPage.html";
 }

@@ -1,0 +1,26 @@
+#containerStudent{
+    display: grid;
+    grid-template-columns: 70% 20%;
+    width: 90%;
+    margin: 5em 5em auto 12em;
+}
+#invoiceList{
+    border-right: 1px solid lightgrey;
+    padding-right: 4em;
+    margin-right: 4em;
+}
+#newInvoice{
+    display: none;
+}
+#deleteInvoice{
+    display:none;
+}
+.update{
+    border-radius: 1em;
+    border-style: solid;
+    padding: 1em;
+    margin: auto auto;
+    width:fit-content;
+    align-self: center;
+    background-color: white;
+}

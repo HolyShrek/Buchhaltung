@@ -1,5 +1,6 @@
 const url= "http://localhost:8080/"
 let studentdata;
+let currentClass;
 
 
 const d = document.getElementById("student-selection");
@@ -73,101 +74,75 @@ async function sendSammeleintrag() {
     const postJson ={};
     const ElementName = document.getElementById("name");
     const ElementPrice = document.getElementById("price");
-    const ElementSelectionClass = document.getElementById("class-selection");
+    let price = ElementPrice.value;
+    const container = document.getElementById("Sammeleintrag");
+    container.style.display= "none";
 
-    const details = document.querySelector("details");
+
+    const details = document.getElementById("student-selection");
     const listInputs = details.querySelectorAll("input:checked");
-
-    const classes = Array.from(ElementSelectionClass.selectedOptions).map(option => option.value);
     const students = Array.from(listInputs, el=> el.value);
     
-    postJson.name = ElementName.value;
-    postJson.price = ElementPrice.value;
-    postJson.class = classes[0];
-    postJson.student = students;
-    console.log(postJson);
-    //send to server
-    const response = await fetch(url + "Sammeleintrag",{
-        method: "POST",
-            headers:{
-                 "Content-Type": "application/json"
+    const currency = container.querySelector("select").value;
+    try {
+        // Fetch currency exchange rate
+        const response = await fetch(`https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_ScSlyGqkvHnE42AkxW2pSQ968he4dMmsEHqQwd2T&currencies=CHF&base_currency=${currency}`);
+        const data = await response.json();
+
+        // Calculate price
+        let calculations = data.data.CHF * price;
+        price = calculations.toFixed(2);
+
+        // Prepare JSON payload
+        let postJson = {
+            name: ElementName.value,
+            price: price,
+            student: students
+        };
+
+        console.log(postJson);
+
+        // Send data to server
+        const postResponse = await fetch(url + "Sammeleintrag", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
             },
-        body: JSON.stringify(postJson)
-    });
-    const verdict = await response.text();//evaluate Server Response
-    console.log(verdict);
+            body: JSON.stringify(postJson)
+        });
+
+        // Evaluate server response
+        const verdict = await postResponse.text();
+        console.log(verdict);
+
+    } catch (error) {
+        console.error("Error fetching or posting data:", error);
+    }
 }
 async function sendNewStudent(){
     //get params
     const ElementName = document.getElementById("newStudentName");
     const details = document.getElementById("newStudent-selection");
-    const ElementCheckbox = document.getElementById("deleteStudent");
+    const container = document.getElementById("newStudent");
+    container.style.display="none";
+    //const ElementCheckbox = document.getElementById("deleteStudent");
     const listInput = details.querySelectorAll("input:checked");
     const name = ElementName.value; 
     const classes = Array.from(listInput, el=> el.value);
     //send params
-    if(ElementCheckbox.checked){
-        const response = await fetch(url + "deleteStudent/" + name);
-        console.log(response);
-    }else{
-        const response = await fetch(url + "newStudent/" + name + "/" + classes[0]);
-        console.log(response);
-    }
+    const response = await fetch(url + "newStudent/" + name + "/" + classes[0]);
+    console.log(response);
 }
-async function poll() {
-    //const responseStudent = await fetch(url + "students");
+async function init() {
     const responseSaldo = await fetch(url+"students/Saldo");
     const data = await responseSaldo.json();
     studentdata= data;
-    console.log(data);
     displayClassSelector();
-    displayStudentSelector();
     displayNewStudentSelector();
     displayStudents(data);
+    refresh();
 }
 function displayStudents(a){
-    /*old Display
-    a.forEach(i =>{//Erstellen von Neuem Container
-        let KlassenSaldo = 0;
-        const container = document.createElement("div");
-        container.id  ="container"+i.name;
-        container.className = "Klassensalden";
-        container.innerHTML="<h3 class = 'titel'></h3><table><thead><tr><th>Name</th><th>Betrag</th></tr></thead><tbody></tbody></table>";
-        //Titel
-        const titel = container.querySelector("h3");
-        titel.textContent=i.name;
-        //Anhängen von Containter an grossen Container
-        const containerStudents = document.getElementById("containerStudents");
-        containerStudents.appendChild(container);
-        const tableBody= container.querySelector("tBody");
-        tableBody.innerHTML="";
-        i.data.forEach(item =>{
-            KlassenSaldo+=item.saldo;
-            const row = document.createElement("tr"); //erstellt Reihe
-            //Name hinzufügen
-            const pointName = document.createElement("td");
-            const link = document.createElement("a");
-            link.href = url + "studentAccount/" + item.id;
-            const textName = document.createTextNode(item.name);
-            link.appendChild(textName);
-            pointName.appendChild(link);
-            //Preis Hinzufügen
-            const pointPreis = document.createElement("td");
-            const textPreis = document.createTextNode(item.saldo +"Fr");
-            pointPreis.className = "number";
-            pointPreis.appendChild(textPreis);
-            //Neue Reihe füllen
-
-            row.appendChild(pointName);
-            row.appendChild(pointPreis);
-            tableBody.appendChild(row);
-        })
-        const pointKlassenSaldo =  document.createElement("p");
-        const testSaldo = document.createTextNode("Klassensaldo: " +KlassenSaldo +"Fr.");
-        pointKlassenSaldo.appendChild(testSaldo);
-        container.appendChild(pointKlassenSaldo);
-    })
-    */
     a.forEach(classes=>{
         const list = document.querySelector("div.class-sidebar ul");
         //button
@@ -187,6 +162,8 @@ async function LogOut() {
     console.log(verdict);
 }
 async function calculateCurrency(){
+    const container = document.getElementById("currencyCalculater");
+    container.style.display="none";
     const ElementBetrag = document.querySelector("#currencyCalculater input");
     const ElementAnswer = document.getElementById("EuroSwiss");
     const Betrag = ElementBetrag.value;
@@ -199,61 +176,116 @@ async function calculateCurrency(){
     })
     .catch(error => console.error("Error fetching data:", error));
 }
-document.addEventListener("click", (e) => {
+function displayClass(){
+    //get current class
+    const className = currentClass;
+    const index = studentdata.findIndex(index => index.name == className);
+    //display students
+    const Klassensalden = document.querySelector("#containerStudents div.Klassensalden");
+    Klassensalden.innerHTML = "<h3 class = 'titel'>Schüler</h3><table><thead><tr><th>Name</th><th>Betrag</th></tr></thead><tbody></tbody></table>";
+    const tbody = Klassensalden.querySelector("tbody");
+    studentdata[index].data.forEach(student=>{
+        const row = document.createElement("tr"); //erstellt Reihe
+        //Name hinzufügen
+        const pointName = document.createElement("td");
+        const link = document.createElement("a");
+        link.href = url + "studentAccount/" + student.id;
+        const textName = document.createTextNode(student.name);
+        link.appendChild(textName);
+        pointName.appendChild(link);
+        //Preis Hinzufügen
+        const pointPreis = document.createElement("td");
+        const textPreis = document.createTextNode(student.saldo +"Fr");
+        pointPreis.className = "number";
+        pointPreis.appendChild(textPreis);
+
+        //button
+        const pointButton = document.createElement("td");
+        const button = document.createElement("button");
+        button.className = "buttonDeleteStudent";
+        button.value= student.id;
+        pointButton.appendChild(button);
+        //Neue Reihe füllen
+
+        row.appendChild(pointName);
+        row.appendChild(pointPreis);
+        row.appendChild(pointButton);
+        tbody.appendChild(row);
+    })
+    //display invoices
+    const invoices = document.querySelector("#containerStudents div.everyInvoice");
+    invoices.innerHTML = "<h3 class = 'titel'>Rechnungen</h3><table><thead><tr><th>Name</th><th>Betrag</th><th>Datum</th></tr></thead><tbody></tbody></table>";
+    const tbodyInvoice = invoices.querySelector("tbody");
+    studentdata[index].invoices.forEach(item=>{
+        const row = document.createElement("tr"); //erstellt Reihe
+        //Name hinzufügen
+        const pointName = document.createElement("td");
+        const textName = document.createTextNode(item.name);
+        pointName.appendChild(textName);
+        //Preis Hinzufügen
+        const pointPreis = document.createElement("td");
+        const textPreis = document.createTextNode(item.price +"Fr");
+        pointPreis.className = "number";
+        pointPreis.appendChild(textPreis);
+        //Datum Hinzufügen
+        const pointDatum = document.createElement("td");
+        const textDatum = document.createTextNode(item.date);
+        pointDatum.appendChild(textDatum);
+        //button
+        const pointButton = document.createElement("td");
+        const button = document.createElement("button");
+        button.className = "buttonDeleteInvoice";
+        button.value=item.id;
+        pointButton.appendChild(button)
+        //Neue Reihe füllen
+        row.appendChild(pointName);
+        row.appendChild(pointPreis);
+        row.appendChild(pointDatum);
+        row.appendChild(pointButton);
+        tbodyInvoice.appendChild(row);
+    })
+}
+async function refresh() {
+    try {
+        const responseSaldo = await fetch(url + "students/Saldo");
+
+        if (!responseSaldo.ok) {
+            throw new Error(`${responseSaldo.status}`);
+        }
+
+        const data = await responseSaldo.json();
+        studentdata = data;
+
+        if (data) {
+            displayClass(data);
+        } else {
+            console.warn("No valid data received.");
+        }
+
+    } catch (error) {
+        //console.error("Error fetching student data:", error);
+    }
+
+    await sleep(500);  // Ensure sleep is properly implemented
+    refresh();  // Recursively call itself
+}
+document.addEventListener("click", async(e) => {
+    //document.querySelectorAll(".class-sidebar-button").forEach(item =>{item.style.color = "black"; item.parentElement.style.listStyle="none"});
     if (e.target.matches(".class-sidebar-button")) {
-        //get current class
-        const className = e.target.innerText;
-        const index = studentdata.findIndex(index => index.name == className);
-        console.log(studentdata);
-        //display students
-        const Klassensalden = document.querySelector("#containerStudents div.Klassensalden");
-        Klassensalden.innerHTML = "<h3 class = 'titel'>Schüler</h3><table><thead><tr><th>Name</th><th>Betrag</th></tr></thead><tbody></tbody></table>";
-        const tbody = Klassensalden.querySelector("tbody");
-        studentdata[index].data.forEach(student=>{
-            const row = document.createElement("tr"); //erstellt Reihe
-            //Name hinzufügen
-            const pointName = document.createElement("td");
-            const link = document.createElement("a");
-            link.href = url + "studentAccount/" + student.id;
-            const textName = document.createTextNode(student.name);
-            link.appendChild(textName);
-            pointName.appendChild(link);
-            //Preis Hinzufügen
-            const pointPreis = document.createElement("td");
-            const textPreis = document.createTextNode(student.saldo +"Fr");
-            pointPreis.className = "number";
-            pointPreis.appendChild(textPreis);
-            //Neue Reihe füllen
-
-            row.appendChild(pointName);
-            row.appendChild(pointPreis);
-            tbody.appendChild(row);
-        })
-        //display invoices
-        const invoices = document.querySelector("#containerStudents div.everyInvoice");
-        invoices.innerHTML = "<h3 class = 'titel'>Rechnungen</h3><table><thead><tr><th>Name</th><th>Betrag</th><th>Datum</th></tr></thead><tbody></tbody></table>";
-        const tbodyInvoice = invoices.querySelector("tbody");
-        studentdata[index].invoices.forEach(item=>{
-            const row = document.createElement("tr"); //erstellt Reihe
-            //Name hinzufügen
-            const pointName = document.createElement("td");
-            const textName = document.createTextNode(item.name);
-            pointName.appendChild(textName);
-            //Preis Hinzufügen
-            const pointPreis = document.createElement("td");
-            const textPreis = document.createTextNode(item.price +"Fr");
-            pointPreis.className = "number";
-            pointPreis.appendChild(textPreis);
-            //Datum Hinzufügen
-            const pointDatum = document.createElement("td");
-            const textDatum = document.createTextNode(item.date +"Fr");
-            pointDatum.appendChild(textDatum);
-            //Neue Reihe füllen
-            row.appendChild(pointName);
-            row.appendChild(pointPreis);
-            row.appendChild(pointDatum);
-            tbodyInvoice.appendChild(row);
-        })
-
+        document.querySelectorAll(".class-sidebar-button").forEach(item =>{item.style.color = "black"});
+        e.target.style.color = "blue";
+        currentClass = e.target.innerText;
+        displayClass(currentClass);
+    }
+    if(e.target.matches(".buttonDeleteStudent")){
+        console.log("hallo");
+        const response = await fetch(url + "deleteStudent/" + e.target.value);
+        console.log(response.text);
+    }
+    if (e.target.matches(".buttonDeleteInvoice")){
+        console.log(e.target.value+currentClass);
+        const response = await fetch(url+ "deleteClassInvoice/" + e.target.value +"/" + currentClass);
+        console.log(response.text());
+        displayClass(currentClass);
     }
 });

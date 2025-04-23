@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Student</title>
+        <link rel="stylesheet" href="/startPage.css">
+        <link rel="stylesheet" href="/studentPage/studentPage.css">
+        <script src = "/studentPage/studentPage.js" async></script>
+        <script src="/header/header.js" async></script>
+        <script src ="/sidebar/sidebar.js" async></script>
+        <script src = "/basics.js"></script>
+    </head>
+    <body onload="poll1()">
+        <div id = "sidebarContainer"></div>
+        <div id =headerContainer></div>
+        <h1 class = "titel">StudentName</h1>
+        <div id = "containerStudent">
+            <div id = "invoiceList">
+                <table id = "tableStudent">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Betrag</th>
+                            <th>Datum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <p id = "saldo"></p>
+            </div>
+            <div class = "container-inputs">
+                <button onclick="ToggleInput('newInvoice')">Buchung hinzufügen</button>
+                <button onclick="download()">export</button>
+            </div>
+        </div>
+        <div id = "newInvoice", class = "input">
+            <h3>Neue Buchung</h3>
+            <input placeholder="Name" id = "newInvoiceName">
+            <input placeholder="Preis positiv=>Gutschrift" id = "newInvoicePrice" type = "number">
+            <select>
+                <option>CHF</option>
+                <option>EUR</option>
+                <option>GBP</option>
+                <option>USD</option>
+            </select>
+            <button onclick="newInvoice()">OK</button>
+        </div>
+    </body>
+</html>

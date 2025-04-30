@@ -30,7 +30,7 @@ async function LogInHandler(){
         console.log(`Message erhalten: ${data}`);
         if(response.ok){
             if(data == "Login Erfolgreich"){
-                window.location.href= "startPage.html";
+                window.location.href= "StartPage/startPage.html";
             }else{
                 answer.textContent = data;
             }

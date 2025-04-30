@@ -53,6 +53,8 @@ function displayInvoice(data){
     const saldo = document.getElementById("saldo");
     saldo.textContent="Total:" + data.saldo +"Fr.";
 
+    const name = document.querySelector(".titel");
+    name.textContent= data.name;
 }
 async function newInvoice(){
     const container = document.getElementById("newInvoice");
@@ -114,7 +116,27 @@ async function deleteInvoice(){
     ElementResponse.textContent = "";
 }
 async function download(){
-    
+    try{
+        const loader = document.querySelector(".loader");
+        loader.style.display="block";
+        const id = getUserId();
+        console.log("process ongoing");
+        const res = await fetch(url+ "export/"+ id);
+        if(!res.ok) throw new Error("Error on PDF handling");
+        const blob = await res.blob();
+        const UrlPDF = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = UrlPDF;
+        a.download = "student-"+id +".pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        console.log("process finished succesfully");
+        loader.style.display="none";
+    }catch{
+        console.error("Error");
+    }
 }
 document.addEventListener("click", async(e) => {
     if (e.target.matches(".buttonDeleteInvoice")){

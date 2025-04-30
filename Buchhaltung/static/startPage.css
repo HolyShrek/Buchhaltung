@@ -43,6 +43,7 @@ html{
     color:var(--background);
 }
 .sidebar>a>img{
+    filter:invert(1);
     vertical-align: middle;
     visibility: visible;
     width: 40px;

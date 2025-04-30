@@ -1,0 +1,11 @@
+.wrapper{
+    padding: 2em;
+    border: 1px solid --text;
+    border-radius: 1em;
+    border: solid black 1px;
+    box-shadow: 10px 10px #ddd;
+    width: 20%;
+    margin: 5% auto ;
+    display: flex;
+    flex-direction: column;
+}

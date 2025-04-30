@@ -1,0 +1,46 @@
+<html>
+    <head>
+        <title>Account erstellen</title>
+        <link rel = "stylesheet" href = "createAccountant.css">
+        <link rel = "stylesheet" href="/startPage.css">
+    </head>
+    <script src ="createAccountant.js" async></script>
+    <script src = "/sidebar/sidebar.js" async></script>
+    <script src = "/header/header.js" async></script>
+    <script src = "/heartbeat.js" async></script>
+    <body onload="poll()">
+        <div id="sidebarContainer"></div>
+        <div id = "headerContainer"></div>="response"></p>
+        </div>
+        <div class = "wrapper">
+            <h3>Erstelle neuen Accountant</h3>
+            <input placeholder="Name" id="accountantName" type="text">
+            <input placeholder="Passwort" id="accountantPassword" type="password">
+            <input placeholder="PasswortBestätigen" type="password">
+            <details id="class-selection1">
+                <summary>class-selection</summary>
+                <ul>
+                </ul>
+            </details>
+            <button onclick="createAccount()" id="create">Account erstellen</button>
+            <p id="response"></p>
+            <h3>Passwort ändern</h1>
+            <input placeholder="Neues Passwort" id="newPassword" type="password"></input>
+            <button onclick="newPassword()" id="new">Passwort ändern</button>
+            <p id="response2"></p>
+            <h3>Neue Klasse erstellen</h3>
+            <input placeholder="Name" id="className" type="text">
+            <button onclick="createClass()" id="create">Klasse erstellen</button>
+            <p id="response3"></p>
+            <h3>Berechtigungen erteilen</h4>
+            <input placeholder="Accountant Name" id="accountantName2" type="text">
+            <details id="class-selection2">
+                <summary>class-selection</summary>
+                <ul>
+                </ul>
+            </details>
+            <button onclick="grantAccess()" id="create">Berechtigung erteilen</button>
+            <p id="response4"></p>
+        </div>
+    </body>
+</html>

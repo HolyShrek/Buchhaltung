@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import cookieParser from 'cookie-parser';
+import { access } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
@@ -25,6 +26,7 @@ let userlist = [];
 app.use(express.static('static')); //benutz den static ordner
 app.use(cookieParser()); //cookies
 app.use(express.json());
+checkHeartbeat();
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -148,6 +150,18 @@ async function getEveryInvoice(students) {
         throw err;
     }
 }
+async function checkHeartbeat(){
+    const now = Date.now();
+    for(let i = 0; i<userlist.length; i++){
+        if(now-userlist[i].time >= 10000){
+            console.log("userDisconected" + userlist[i].accountantId);
+            userlist.splice(i, 1);
+        }
+    }
+    console.log(userlist.length);
+    await sleep(1000);
+    checkHeartbeat();
+}
 
 app.get('/logIn/:AccountantName/:AccountantPassword',async (req, res) => {
     //const userId = getUserId(req, res);
@@ -161,7 +175,7 @@ app.get('/logIn/:AccountantName/:AccountantPassword',async (req, res) => {
         if(rightPassword == Password){
             if(userlist.some(item => item.name === Name) == false){
             let userid = getUserId(req, res);
-            userlist.push({"accountantId": jsonArray[0].idAccountant, "id": userid});
+            userlist.push({"accountantId": jsonArray[0].idAccountant, "id": userid, "time": Date.now()});
  
             }
             console.log(userlist);
@@ -212,8 +226,10 @@ app.get('/studentAccount/invoices/:id',  async(req, res)=>{
         let response = {};//json für Antwort
         const invoice = await pool.query("select name, price, date_format(date, '%d-%m-%Y') as date, idInvoice as id from student_has_invoice right join invoice on student_has_invoice.invoice_idInvoice = invoice.idInvoice where student_idStudent= ? ", id);
         const saldo = await pool.query("select sum(price) as s from student_has_invoice right join invoice on student_has_invoice.invoice_idInvoice = invoice.idInvoice where student_idStudent= ? ", id);
+        const n = await pool.query("select name from student where idStudent = ?", [id]);
         response.invoice = invoice;
         response.saldo= saldo[0].s;
+        response.name = n[0].name;
         res.json(response);
     } catch (error) {
         console.error(error);
@@ -279,12 +295,22 @@ app.get('/deleteClassInvoice/:id/:className', async(req,res) =>{
     res.send("all good");
 });
 app.get('/LogOut', async(req, res)=>{
-    const cookie = req.cookies.userid;
-    const index = userlist.findIndex(item => item.id == cookie); // Use findIndex()
-    if (index !== -1) { 
-        userlist.splice(index, 1); 
+    let response ={};
+    try{
+        const cookie = req.cookies.userid;
+        const index = userlist.findIndex(item => item.id == cookie); // Use findIndex()
+        if (index !== -1) { 
+            userlist.splice(index, 1); 
+        }else{
+            throw new accessError("no User found");
+        }
+        response.logOut = true; 
+        res.json(response);
+    }catch({name : message}){
+        console.log(message);
+        response.logOut = false;
+        res.json(response);
     }
-    res.send("test");
 });
 
 app.get('/newStudent/:name/:class', async (req, res) =>{
@@ -364,6 +390,51 @@ app.get('/export/:id', async(req, res) =>{
         'Content-Length': pdfBuffer.length
       });
       res.end(pdfBuffer);
+});
+app.get('/design/:themeId', async(req,res)=>{
+    const themeId = req.params.themeId;
+    const cookie = req.cookies.userid;
+    const id = getUserByCookie(cookie);
+    if(id  !== undefined){
+        if(themeId !=-1){
+            console.log(themeId);
+            const veridct = await pool.query("update accountant set design = ? where idAccountant = ?", [themeId, id]);
+            console.log(veridct);
+        }
+        const response = await pool.query("select design from accountant where idAccountant = ? ", id);
+        console.log(response);
+        const dark = {design : response[0].design};
+        res.json(dark);
+    }
+});
+app.get('/heartbeat', async(req,res) =>{
+    const cookie = req.cookies.userid;
+    const user = userlist.find(item => item.id == cookie);
+    if (user) {
+        user.time = Date.now();
+        console.log("time Set for" + cookie + "to" + Date.now());
+    }
+    res.send("all good");
+});
+
+app.get('/newClass/:name', async(req, res)=>{
+    const name = req.params.name;
+    const cookie = req.cookies.userid;
+    const userId = getUserByCookie(cookie);
+    const check = await pool.query("select * from class where name = ?", [name]);
+    if(check.length == 0){
+        const InsertClass = await pool.query("insert into class (name) values (?)", [name]);
+        const InsertConnection = await pool.query("insert into accountant_has_class (accountant_idAccountant, class_name) values (?, ?)", [userId, name])
+        if(InsertClass && InsertConnection){
+            res.send("update Successfull")
+        }
+        else{
+            res.send("update Failed")
+        }
+    }
+    else{
+        res.send("error: class already exists")
+    }
 })
 
 app.post('/newStudentInvoice',  async(req, res)=>{
@@ -405,28 +476,68 @@ app.post('/Sammeleintrag', async(req, res)=>{
     }
     res.send("update Successfull");
 });
-
 app.post('/newAccountant', async(req, res)=>{
     const receivedData = req.body;
     const InsertAccountant = await pool.query("insert into accountant (name, password) values (?, ?)", [receivedData.name, receivedData.password]);
+ 
     for(const classElement of receivedData.class){
         const InsertConnection = await pool.query("insert into  accountant_has_class (accountant_idAccountant, class_name) values (?, ?)", [InsertAccountant.insertId, classElement])
     }
-   res.send("update Successfull");
-
+    if(InsertAccountant){
+        res.send("update Successfull")
+    }
+    else{
+        res.send("update Failed")
+    }
+ 
+});
+ 
+app.post('/changePassword', async(req, res)=>{
+    const receivedData = req.body;
+    const cookie = req.cookies.userid;
+    const userId = getUserByCookie(cookie);
+    const ReplacePassword = await pool.query("update accountant set password = ? where idAccountant = ?", [receivedData.value, userId]);
+    if(ReplacePassword){
+        res.send("update Successfull")
+    }
+    else{
+        res.send("update Failed")
+    }
 })
-
-
-
+app.post('/grantAccess', async(req, res)=>{
+    const receivedData = req.body;
+    const AccountantId = await pool.query("select idAccountant from accountant where name = ?", [receivedData.name])
+    if(!AccountantId){
+        res.send("Accountant existiert nicht")
+    }
+    const accessibleClasses = await pool.query("select class_name from accountant_has_class where accountant_idAccountant = ?", [AccountantId[0].idAccountant]);
+ 
+    let contained = false;
+    for(const classElement of receivedData.class){
+        for(const element of accessibleClasses){
+            if(classElement == element.class_name){
+                contained = true;
+            }
+        }
+        if(!contained){
+            const InsertConnection = await pool.query("insert into accountant_has_class (accountant_idAccountant, class_name) values (?, ?)", [AccountantId[0].idAccountant, classElement])
+        }
+        contained = false;
+    }
+ 
+ 
+    res.send("update Successfull");
+ 
+});
 
 app.get('/', (req, res) => {
-    res.redirect("LogIn.html");
+    res.redirect("/LogIn.html");
 });
 
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`)
-})
+});
 
 //TODO
 

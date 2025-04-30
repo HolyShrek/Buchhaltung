@@ -1,5 +1,5 @@
 
-const url= "http://localhost:8080/";
+const url= "http://localhost:8080/"; // Basis-URL für die Serveranfragen
 
 /**
  * Diese Funktion erstellt einen SHA-256 Hash eines übergebenen Textes (z.B. Passwort).

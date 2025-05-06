@@ -1,10 +1,10 @@
-const url= "http://localhost:8080/"
-let studentdata;
+const url= "http://localhost:8080/" // statischer Teil der Server-URL
+let studentdata; // zum Speichern aller Klassen, Schüler und Rechnungen, auf die der Nutzer Zugriff hat
 
 /**
- * erstellt einen SHA-256 Hash eines übergebenen Textes (z.B. Passwort).
- * @param {string} message - der zu hashende Text.
- * @returns {string} hashHex - der Hash als Hex-String.
+ * Erstellt einen SHA-256 Hash eines übergebenen Textes (z.B. Passwort).
+ * @param {string} message - der zu hashende Text
+ * @returns {string} hashHex - der Hash als Hex-String
  */
 async function digestMessage(message) {
     const msgUint8 = new TextEncoder().encode(message); // kodiert den String als UTF-8 Byte-Array
@@ -17,12 +17,12 @@ async function digestMessage(message) {
 }
 
 /**
- * speichert die Schüler und Klassen in studentdata und ruft displayClassSelector() auf
- * ruft die Saldo-Funktion auf, die alle Schüler und Klassen zurückgibt, wofür der Benutzer die Berechtigung hat
+ * Speichert die Schüler und Klassen in studentdata und ruft displayClassSelector() auf
+ * Ruft die Saldo-Funktion auf, die alle Schüler und Klassen zurückgibt, wofür der Benutzer die Berechtigung hat
  */
 async function poll() {
     heartbeat();
-    const responseSaldo = await fetch(url+"students/Saldo"); // Server-Anfrage
+    const responseSaldo = await fetch(url+"students/Saldo"); // Serveranfrage
     const data = await responseSaldo.json(); // speichert erhaltene Schüler und Klassen
     studentdata= data;
     console.log(data);
@@ -31,8 +31,8 @@ async function poll() {
 }
 
 /**
- * erstellt die Klassenauswahl
- * erzeugt eine Liste und füllt sie mit den Klassen aus
+ * Erstellt die Klassenauswahl
+ * Erzeugt eine Liste und füllt sie mit den Klassen aus
  * @param {string} id - id der Klassenauswahl
  */
 function displayClassSelector(id){
@@ -55,8 +55,8 @@ function displayClassSelector(id){
 }
 
 /**
- * erstellt einen neuen Accountant-Account
- * ruft die newAccountant-Funktion auf, die die Daten in die Datenbank einfügt
+ * Erstellt einen neuen Accountant-Account
+ * Ruft die newAccountant-Funktion auf, die die Daten in die Datenbank einfügt
  */
 async function createAccount(){
     const wrapper = document.querySelector(".wrapper");
@@ -79,7 +79,7 @@ async function createAccount(){
     }
     postJson.password = await digestMessage(ElementPassword.value); // hasht das Passwort
 
-    // Server-Anfrage, übergibt den Json mit der POST-Methode
+    // Serveranfrage, übergibt den Json mit der POST-Methode
     const response = await fetch(url + "newAccountant",{
         method: "POST",
             headers:{
@@ -99,8 +99,8 @@ async function createAccount(){
 }
 
 /**
- * ändert das Passwort des Nutzers
- * ruft die changePassword-Funktion auf, um das Passwort in der Datenbank zu ändern
+ * Àndert das Passwort des Nutzers
+ * Ruft die changePassword-Funktion auf, um das Passwort in der Datenbank zu ändern
  */
 async function newPassword(){
     const ElementPassword = document.getElementById("newPassword"); // Passworteingabe-Element
@@ -108,7 +108,7 @@ async function newPassword(){
  
     const password = await digestMessage(ElementPassword.value); // hasht das eingegebene Passwort
     const data = {value: password};
-    // Server-Anfrage, übergibt Passwort mit der POST-methode
+    // Serveranfrage, übergibt Passwort mit der POST-methode
     const response = await fetch(url + "changePassword",{
         method: "POST",
             headers:{
@@ -122,22 +122,22 @@ async function newPassword(){
 }
 
 /**
- * erstellt eine neue Klasse
- * liest Klassennamen ein und ruft die newClass-Funktion auf, um die Klasse in die Datenbank einzufügen
+ * Erstellt eine neue Klasse
+ * Liest Klassennamen ein und ruft die newClass-Funktion auf, um die Klasse in die Datenbank einzufügen
  */
 async function createClass(){
     const ElementName = document.getElementById("className"); // Element zur Klassennamen-Eingabe
     const ElementSucess = document.getElementById("response3"); // Element zur Ausgabe der Serverantwort
     const name = ElementName.value;
-    const response = await fetch(url + "newClass/" + name); // Server-Anfrage mit dem Klassennamen
+    const response = await fetch(url + "newClass/" + name); // Serveranfrage mit dem Klassennamen
     const verdict = await response.text(); // Server-Antwort
     ElementName.value = "";
     ElementSucess.textContent = verdict; // gibt Server-Antwort aus
 }
 
 /**
- * erteilt einem Accountant Berechtigungen auf ausgewählte Klassen
- * liest die ausgewählten Klassen und den zu berechtigenden Accountant ein
+ * Erteilt einem Accountant Berechtigungen auf ausgewählte Klassen
+ * Liest die ausgewählten Klassen und den zu berechtigenden Accountant ein
  */
 async function grantAccess(){
     const ElementName = document.getElementById("accountantName2"); // Nameneingabe-Element
@@ -150,7 +150,7 @@ async function grantAccess(){
     const data = {}; // Json, in dem die ausgewälten Klassen und der Accountant-Name gespeichert wird
     data.class = classes;
     data.name = name;
-    // Server-Anfrage, übergibt Klassennamen und Accountantname
+    // Serveranfrage, übergibt Klassennamen und Accountantname
     const response = await fetch(url + "grantAccess",{
         method: "POST",
             headers:{

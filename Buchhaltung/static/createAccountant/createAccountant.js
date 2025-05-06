@@ -1,15 +1,20 @@
 const url= "http://localhost:8080/"
 let studentdata;
 
-async function digestMessage(message) {//hasch für Passwort
-    const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
-    const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8); // hash the message
-    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+/**
+ * erstellt einen SHA-256 Hash eines übergebenen Textes (z.B. Passwort).
+ * @param {string} message - der zu hashende Text.
+ * @returns {string} der Hash als Hex-String.
+ */
+async function digestMessage(message) {
+    const msgUint8 = new TextEncoder().encode(message); // kodiert den String als UTF-8 Byte-Array
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8); // erstellt SHA-256 Hash
+    const hashArray = Array.from(new Uint8Array(hashBuffer)); // wandelt Hash in ein Array von Bytes um
     const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join(""); // convert bytes to hex string
-    return hashHex;
-  }
+      .map((b) => b.toString(16).padStart(2, "0")) // wandelt jedes Byte in einen Hex-Wert um
+      .join(""); // verbindet alle Hex-Werte zu einem String
+  return hashHex; // gibt den finalen Hex-Hash zurück
+}
 
 async function poll() {
     heartbeat();

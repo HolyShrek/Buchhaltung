@@ -1,6 +1,6 @@
-const url= "http://localhost:8080/"
-let studentdata; // zum speichern der Schüler und Klassen aus einer Server-Anfrage
-let currentClass; 
+const url= "http://localhost:8080/" // statischer Teil der Server-URL
+let studentdata; // zum Speichern aller Klassen, Schüler und Rechnungen, auf die der Nutzer Zugriff hat
+let currentClass; // für die Schülerauflistung ausgewälte Klasse
 
 // Schülerauswahl wird beim Ausklappen neu geladen
 const d = document.getElementById("student-selection");
@@ -12,8 +12,8 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 /**
- * erstellt eine Klassenauswahl, um die Klasse eines neuen Schülers auszuwählen
- * erzeugt eine Liste und füllt sie mit den Klassennamen und dazugehörenden Checkboxen
+ * Erstellt eine Klassenauswahl, um die Klasse eines neuen Schülers auszuwählen.
+ * Erzeugt eine Liste und füllt sie mit den Klassennamen und dazugehörenden Checkboxen.
  */
 function displayNewStudentSelector(){
     const details = document.getElementById("newStudent-selection"); 
@@ -35,7 +35,7 @@ function displayNewStudentSelector(){
 }
 
 /**
- * erstellt die Klassenauswahl für einen Sammeleintrag
+ * Erstellt die Klassenauswahl für einen Sammeleintrag
  * Funktionsweise: siehe displayNewStudentSelector()
  */
 function displayClassSelector(){
@@ -56,8 +56,8 @@ function displayClassSelector(){
 }
 
 /**
- * erstellt die Schülerauswahl für einen Sammeleintrag
- * erstellt eine Liste und füllt sie mit den Schülern der ausgewählten Klassen sowie dazugehörenden Checkboxen
+ * Erstellt die Schülerauswahl für einen Sammeleintrag.
+ * Erstellt eine Liste und füllt sie mit den Schülern der ausgewählten Klassen sowie dazugehörenden Checkboxen.
  */
 function displayStudentSelector() {
     const selectedClass = document.getElementById("class-selection"); // die Klassenauswahl für den Sammeleintrag
@@ -91,8 +91,8 @@ function displayStudentSelector() {
 }
 
 /**
- * sendet den Sammeleintrag an den Server
- * erstellt ein JSON mit allen benötigten Daten und macht damit eine Server-Anfrage
+ * Sendet den Sammeleintrag an den Server
+ * Erstellt ein JSON mit allen benötigten Daten und macht damit eine Serveranfrage
  */
 async function sendSammeleintrag() {
     const postJson ={};
@@ -145,8 +145,8 @@ async function sendSammeleintrag() {
 }
 
 /**
- * sendet die Daten eines neu erstellten Schülers an den Server
- * erstellt ein JSON mit allen benötigten Daten und macht damit eine Server-Anfrage
+ * Sendet die Daten eines neu erstellten Schülers an den Server.
+ * Erstellt ein JSON mit allen benötigten Daten und macht damit eine Serveranfrage.
  */
 async function sendNewStudent(){
     //get params
@@ -165,8 +165,8 @@ async function sendNewStudent(){
 }
 
 /**
- * initialisiert beide Klassenauswahlen
- * macht eine Serveranfrage für alle Schüler- und Klassennamen (auf die der Accountant Zugriff hat)
+ * Initialisiert alle Klassenauswahlen
+ * Erhält studentdata durch eine Serveranfrage
  */
 async function init() {
     const responseSaldo = await fetch(url+"students/Saldo"); // Serveranfrage
@@ -175,12 +175,12 @@ async function init() {
     displayClassSelector(); // initialisiert Klassenauswahl für Sammeleintrag
     displayNewStudentSelector(); // initialisert Klassenauswahl für neuen Schüler
     displayStudents(data); // initialisiert Klassenauswahl für Schülerdarstellung
-    refresh();
+    refresh(); // erneuert studentdata regelmässig
 }
 
 /**
- * erstellt Klassenauswahl für die Schülerdarstellung
- * erzeugt eine Liste aus Knöpfen mit Klassennamen
+ * Erstellt Klassenauswahl für die Schülerdarstellung
+ * Erzeugt eine Liste aus Knöpfen mit Klassennamen
  * @param {object} a - Objekt, dass Klassen enthält
  */
 function displayStudents(a){
@@ -199,86 +199,91 @@ function displayStudents(a){
 }
 
 /**
- * initialisiert beide Klassenauswahlen
- * macht eine Serveranfrage für alle Schüler- und Klassennamen (auf die der Accountant Zugriff hat)
+ * Währungsrechner, rechnet Franken in Euro um
+ * 
  */
 async function calculateCurrency(){
     const container = document.getElementById("currencyCalculater");
     container.style.display="none";
-    const ElementBetrag = document.querySelector("#currencyCalculater input");
-    const ElementAnswer = document.getElementById("EuroSwiss");
-    const Betrag = ElementBetrag.value;
+    const ElementBetrag = document.querySelector("#currencyCalculater input"); // Betrag-Eingabe
+    const ElementAnswer = document.getElementById("EuroSwiss"); // Ausgabe-Element
+    const Betrag = ElementBetrag.value; 
+    // fetched Wechselkurse mit Franken von Web-API
     fetch('https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_ScSlyGqkvHnE42AkxW2pSQ968he4dMmsEHqQwd2T&currencies=EUR&base_currency=CHF')
     .then(response => response.json())
     .then(data => {
-        const calculations = data.data.EUR * Betrag;
-        const round = calculations.toFixed(2);
-        ElementAnswer.textContent = round+ " EURO";
+        const calculations = data.data.EUR * Betrag; // berechnet Betrag in Euro
+        const round = calculations.toFixed(2); // Resultat als String mit zwei Nachkommastellen
+        ElementAnswer.textContent = round+ " EURO"; // gibt Resultat aus
     })
     .catch(error => console.error("Error fetching data:", error));
 }
+
+/**
+ * Listet die Schüler einer Klasse mit ihrem jeweiligen Saldo auf sowie alle Rechnungen der Klasse.
+ * 
+ */
 function displayClass(){
-    //get current class
-    const className = currentClass;
-    const index = studentdata.findIndex(index => index.name == className);
-    //display students
+    const className = currentClass; // ausgewählte Klasse
+    const index = studentdata.findIndex(index => index.name == className); // Index der ausgewälten Klass in studentdata
+    // listet Schüler auf
     const Klassensalden = document.querySelector("#containerStudents div.Klassensalden");
-    Klassensalden.innerHTML = "<h3 class = 'titel'>Schüler</h3><table><thead><tr><th>Name</th><th>Betrag</th></tr></thead><tbody></tbody></table>";
+    Klassensalden.innerHTML = "<h3 class = 'titel'>Schüler</h3><table><thead><tr><th>Name</th><th>Betrag</th></tr></thead><tbody></tbody></table>"; // Überschrift für Schülerauflistung
     const tbody = Klassensalden.querySelector("tbody");
-    studentdata[index].data.forEach(student=>{
-        const row = document.createElement("tr"); //erstellt Reihe
-        //Name hinzufügen
+    studentdata[index].data.forEach(student=>{ // iteriert durch alle Schüler der ausgewälten Klasse
+        const row = document.createElement("tr"); //erstellt eine Reihe
+        // fügt Schülername und Link mit Schüler-Id hinzu
         const pointName = document.createElement("td");
         const link = document.createElement("a");
         link.href = url + "studentAccount/" + student.id;
         const textName = document.createTextNode(student.name);
         link.appendChild(textName);
         pointName.appendChild(link);
-        //Preis Hinzufügen
+        // fügt Schülersaldo hinzu
         const pointPreis = document.createElement("td");
         const textPreis = document.createTextNode(student.saldo +"Fr");
         pointPreis.className = "number";
         pointPreis.appendChild(textPreis);
 
-        //button
+        // fügt Knopf zur Entfernung des Schülers hinzu
         const pointButton = document.createElement("td");
         const button = document.createElement("button");
         button.className = "buttonDeleteStudent";
         button.value= student.id;
         pointButton.appendChild(button);
-        //Neue Reihe füllen
-
+        
+        // füllt Reihe mit Schülername, Saldo und Knopf
         row.appendChild(pointName);
         row.appendChild(pointPreis);
         row.appendChild(pointButton);
         tbody.appendChild(row);
     })
-    //display invoices
+    // listet Rechnungen auf
     const invoices = document.querySelector("#containerStudents div.everyInvoice");
-    invoices.innerHTML = "<h3 class = 'titel'>Rechnungen</h3><table><thead><tr><th>Name</th><th>Betrag</th><th>Datum</th></tr></thead><tbody></tbody></table>";
+    invoices.innerHTML = "<h3 class = 'titel'>Rechnungen</h3><table><thead><tr><th>Name</th><th>Betrag</th><th>Datum</th></tr></thead><tbody></tbody></table>"; // Überschrift für Rechnungsauflistung
     const tbodyInvoice = invoices.querySelector("tbody");
-    studentdata[index].invoices.forEach(item=>{
+    studentdata[index].invoices.forEach(item=>{ // iteriert duch alle Rechnungen der ausgewälten Klasse
         const row = document.createElement("tr"); //erstellt Reihe
-        //Name hinzufügen
+        // fügt Rechnungsname hinzu
         const pointName = document.createElement("td");
         const textName = document.createTextNode(item.name);
         pointName.appendChild(textName);
-        //Preis Hinzufügen
+        // fügt Rechnungsbetrag hinzu
         const pointPreis = document.createElement("td");
         const textPreis = document.createTextNode(item.price +"Fr");
         pointPreis.className = "number";
         pointPreis.appendChild(textPreis);
-        //Datum Hinzufügen
+        // fügt Rechnungsdatum hinzu
         const pointDatum = document.createElement("td");
         const textDatum = document.createTextNode(item.date);
         pointDatum.appendChild(textDatum);
-        //button
+        // fügt Knopf zur Entfernung der Rechnung hinzu
         const pointButton = document.createElement("td");
         const button = document.createElement("button");
         button.className = "buttonDeleteInvoice";
         button.value=item.id;
         pointButton.appendChild(button)
-        //Neue Reihe füllen
+        // füllt Reihe mit Name, Betrag, Datum und Knopf
         row.appendChild(pointName);
         row.appendChild(pointPreis);
         row.appendChild(pointDatum);
@@ -286,14 +291,21 @@ function displayClass(){
         tbodyInvoice.appendChild(row);
     })
 }
+
+/**
+ * Erneuert immer wieder die Werte von studentdata, da sich diese durch Hinzufügen/Entfernen von Schülern/Rechnungen ändern können
+ * 
+ */
 async function refresh() {
     try {
-        const responseSaldo = await fetch(url + "students/Saldo");
+        const responseSaldo = await fetch(url + "students/Saldo"); // Serveranfrage
 
+        // Serverantwort überprüfen
         if (!responseSaldo.ok) {
             throw new Error(`${responseSaldo.status}`);
         }
 
+        // studentdata erneuern
         const data = await responseSaldo.json();
         studentdata = data;
 
@@ -306,26 +318,30 @@ async function refresh() {
     } catch (error) {
         //console.error("Error fetching student data:", error);
     }
-
-    await sleep(500);  // Ensure sleep is properly implemented
-    refresh();  // Recursively call itself
+    // Funktion ruft sich in regelmässigen Intervallen selbst auf, um studentdata zu erneuern
+    await sleep(500);
+    refresh();
 }
+
+// fügt an alle Elemente in startPage.html einen click-Event-Handler an
 document.addEventListener("click", async(e) => {
-    //document.querySelectorAll(".class-sidebar-button").forEach(item =>{item.style.color = "black"; item.parentElement.style.listStyle="none"});
+    // handelt es sich beim Element um einen Knopf aus der 
     if (e.target.matches(".class-sidebar-button")) {
         document.querySelectorAll(".class-sidebar-button").forEach(item =>{item.style.color = "black"});
         e.target.style.color = "blue";
         currentClass = e.target.innerText;
         displayClass(currentClass);
     }
+    // bei einem Knopf aus der Schülerauflistung wird der entsprechende Schüler mittels Serveranfrage gelöscht
     if(e.target.matches(".buttonDeleteStudent")){
         console.log("hallo");
-        const response = await fetch(url + "deleteStudent/" + e.target.value);
+        const response = await fetch(url + "deleteStudent/" + e.target.value); // Serveranfrage
         console.log(response.text);
     }
+    //bei einem Knopf aus der Rechnungsauflistung wird die entsprechende Rechnung mittels Serveranfrage gelöscht
     if (e.target.matches(".buttonDeleteInvoice")){
         console.log(e.target.value+currentClass);
-        const response = await fetch(url+ "deleteClassInvoice/" + e.target.value +"/" + currentClass);
+        const response = await fetch(url+ "deleteClassInvoice/" + e.target.value +"/" + currentClass); // Serveranfrage
         console.log(response.text());
         displayClass(currentClass);
     }

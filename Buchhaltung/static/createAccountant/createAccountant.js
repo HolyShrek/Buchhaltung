@@ -64,7 +64,7 @@ async function createAccount(){
     const ElementPassword = document.getElementById("accountantPassword"); // Passworteingabe-Element
     const ElementSuccess = document.getElementById("response"); // Element zur Ausgabe der Serverantwort
     const NewAccount = document.getElementById("create"); // Button zur Erstellung
-    const ElementSelectionClass = document.getElementById("class-selection"); // Klassenauswahl-Element
+    const ElementSelectionClass = document.getElementById("class-selection1"); // Klassenauswahl-Element
     
     const selected = ElementSelectionClass.querySelectorAll("input:checked"); // wählt alle Inputs aus der Klassenauswahl aus, die angekreuzt wurden
     const classes = Array.from(selected, el => el.value); // speichert die Namen der angekreuzten Klassen in einem Array

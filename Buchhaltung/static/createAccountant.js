@@ -1,52 +1,53 @@
-const url= "http://localhost:8080/" // Basis-URL für die Serveranfragen
-let studentdata; // Speichert die Schüler- und Klassendaten aus einer Serveranfrage
+const url= "http://localhost:8080/" // asis-URL für die Serveranfragen
+let studentdata; // speichert die Schüler- und Klassendaten aus einer Serveranfrage
 
 /**
- * Diese Funktion erstellt einen SHA-256 Hash eines übergebenen Textes (z.B. Passwort).
- * @param {string} message - Der zu hashende Text.
- * @returns {string} Der Hash als Hex-String.
+ * erstellt einen SHA-256 Hash eines übergebenen Textes (z.B. Passwort).
+ * @param {string} message - der zu hashende Text.
+ * @returns {string} der Hash als Hex-String.
  */
 async function digestMessage(message) {
-    const msgUint8 = new TextEncoder().encode(message); // Kodiert den String als UTF-8 Byte-Array
-    const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8); // Erstellt SHA-256 Hash
-    const hashArray = Array.from(new Uint8Array(hashBuffer)); // Wandelt Hash in ein Array von Bytes um
+    const msgUint8 = new TextEncoder().encode(message); // kodiert den String als UTF-8 Byte-Array
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8); // erstellt SHA-256 Hash
+    const hashArray = Array.from(new Uint8Array(hashBuffer)); // wandelt Hash in ein Array von Bytes um
     const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0")) // Wandelt jedes Byte in einen Hex-Wert um
-      .join(""); // Verbindet alle Hex-Werte zu einem String
-  return hashHex; // Gibt den finalen Hex-Hash zurück
+      .map((b) => b.toString(16).padStart(2, "0")) // wandelt jedes Byte in einen Hex-Wert um
+      .join(""); // verbindet alle Hex-Werte zu einem String
+  return hashHex; // gibt den finalen Hex-Hash zurück
 }
 
 /**
- * Diese Funktion speichert die Schüler und Klassen in studentdata und ruft displayClassSelector() auf
- * Sie ruft die Saldo-Funktion auf, die alle Schüler und Klassen zurückgibt, wofür der Benutzer die Berechtigung hat
+ * speichert die Schüler und Klassen in studentdata und ruft displayClassSelector() auf
+ * ruft die Saldo-Funktion auf, die alle Schüler und Klassen zurückgibt, wofür der Benutzer die Berechtigung hat
  */
 async function poll() {
     const responseSaldo = await fetch(url+"students/Saldo"); // Server-Anfrage
-    const data = await responseSaldo.json(); // Speichert erhaltene Schüler und Klassen
+    const data = await responseSaldo.json(); // speichert erhaltene Schüler und Klassen
     studentdata= data;
     console.log(data);
-    displayClassSelector(); // Ruft displayClassSelector() auf, um die Klassenauswahl anzuzeigen
+    displayClassSelector(); // ruft displayClassSelector() auf, um die Klassenauswahl anzuzeigen
 }
 
 /**
- * Diese Funktion erstellt die Klassenauswahl
- * Sie erzeugt eine Liste und füllt sie mit den Klassen aus
+ * erstellt die Klassenauswahl
+ * erzeugt eine Liste und füllt sie mit den Klassen aus
  */
 function displayClassSelector(){
     const details = document.getElementById("class-selection"); // Element für die Klassenauswahl
     const ul = details.querySelector("ul"); // Listen-Element
     ul.innerHTML ="";
-    studentdata.forEach(item =>{ // Iteriert durch alle Klassen
-        //Erzeugt ein Listenpunkt, ein Label und ein Inputelement
+    studentdata.forEach(item =>{ // iteriert durch alle Klassen
+        //erzeugt einen Listenpunkt, ein Label und ein Inputelement
         const li = document.createElement("li");
         const label = document.createElement("label");
-        const input = document.createElement("input")
+        const input = document.createElement("input");
+        // hängt dem Listenpunkt das Label mit Klassennamen und den Input als Checkbox an
         label.innerText = item.name;
         input.value = item.name;
         input.type = "checkbox";
         label.prepend(input);
         li.appendChild(label);
-        ul.appendChild(li);
+        ul.appendChild(li); // fügt dem Listenelement den Listenpunkt zu
     });
 }
 

@@ -16,14 +16,18 @@ async function digestMessage(message) {
   return hashHex; // gibt den finalen Hex-Hash zurück
 }
 
+/**
+ * speichert die Schüler und Klassen in studentdata und ruft displayClassSelector() auf
+ * ruft die Saldo-Funktion auf, die alle Schüler und Klassen zurückgibt, wofür der Benutzer die Berechtigung hat
+ */
 async function poll() {
     heartbeat();
-    const responseSaldo = await fetch(url+"students/Saldo");
-    const data = await responseSaldo.json();
+    const responseSaldo = await fetch(url+"students/Saldo"); // Server-Anfrage
+    const data = await responseSaldo.json(); // speichert erhaltene Schüler und Klassen
     studentdata= data;
     console.log(data);
     displayClassSelector("class-selection1");
-    displayClassSelector("class-selection2");
+    displayClassSelector("class-selection2"); // ruft displayClassSelector() auf, um die Klassenauswahl anzuzeigen
 }
 
 function displayClassSelector(id){

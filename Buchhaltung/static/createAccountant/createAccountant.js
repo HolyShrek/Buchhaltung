@@ -4,7 +4,7 @@ let studentdata;
 /**
  * erstellt einen SHA-256 Hash eines übergebenen Textes (z.B. Passwort).
  * @param {string} message - der zu hashende Text.
- * @returns {string} der Hash als Hex-String.
+ * @returns {string} hashHex - der Hash als Hex-String.
  */
 async function digestMessage(message) {
     const msgUint8 = new TextEncoder().encode(message); // kodiert den String als UTF-8 Byte-Array
@@ -30,25 +30,34 @@ async function poll() {
     displayClassSelector("class-selection2"); // ruft displayClassSelector() auf, um die Klassenauswahl anzuzeigen
 }
 
+/**
+ * erstellt die Klassenauswahl
+ * erzeugt eine Liste und füllt sie mit den Klassen aus
+ * @param {string} id - id der Klassenauswahl
+ */
 function displayClassSelector(id){
-    const details = document.getElementById(id);
-    const ul = details.querySelector("ul");
+    const details = document.getElementById(id); // Element für die Klassenauswahl
+    const ul = details.querySelector("ul"); // Listen-Element
     ul.innerHTML ="";
-    studentdata.forEach(item =>{
+    studentdata.forEach(item =>{ // iteriert durch alle Klassen
+        //erzeugt einen Listenpunkt, ein Label und ein Inputelement
         const li = document.createElement("li");
         const label = document.createElement("label");
-        const input = document.createElement("input")
+        const input = document.createElement("input");
+        // hängt dem Listenpunkt das Label mit Klassennamen und den Input als Checkbox an
         label.innerText = item.name;
         input.value = item.name;
         input.type = "checkbox";
         label.prepend(input);
         li.appendChild(label);
-        ul.appendChild(li);
+        ul.appendChild(li); // fügt dem Listenelement den Listenpunkt zu
     });
 }
 
-
-
+/**
+ * erstellt einen neuen Accountant-Account
+ * ruft die newAccountant-Funktion auf, die die Daten in die Datenbank einfügt
+ */
 async function createAccount(){
     const wrapper = document.querySelector(".wrapper");
     const ElementName = document.getElementById("accountantName");
@@ -56,15 +65,15 @@ async function createAccount(){
     const Success = document.getElementById("response");
     const NewAccount = document.getElementById("create");
     const ElementSelectionClass = document.getElementById("class-selection");
-
-    //let classes = Array.from(ElementSelectionClass.selectedOptions).map(option => option.value);
-    const selected = ElementSelectionClass.querySelectorAll("input:checked");
-    const classes = Array.from(selected, el => el.value);
+    
+    const selected = ElementSelectionClass.querySelectorAll("input:checked"); // wählt alle Inputs aus der Klassenauswahl aus, die angekreuzt wurden
+    const classes = Array.from(selected, el => el.value); // speichert die Namen der angekreuzten Klassen in einem Array
     console.log(classes);
     let postJson = {};
     postJson.class = classes;
     postJson.name = ElementName.value;
-    if(ElementPassword.value != wrapper.querySelector("input[placeholder='PasswortBestätigen']").value){
+    
+    if(ElementPassword.value != wrapper.querySelector("input[placeholder='Passwort bestätigen']").value){
         Success.textContent="Falsches Passwort";
         return;
     }

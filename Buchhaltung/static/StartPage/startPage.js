@@ -12,23 +12,25 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 /**
- * erstellt die Schülerauswahl
- * erzeugt eine Liste und füllt sie mit den Schülernamen aus
+ * erstellt eine Klassenauswahl, um die Klasse eines neuen Schülers auszuwählen
+ * erzeugt eine Liste und füllt sie mit den Klassennamen aus
  */
 function displayNewStudentSelector(){
     const details = document.getElementById("newStudent-selection"); 
-    const ul = details.querySelector("ul");
+    const ul = details.querySelector("ul"); // Listenelement, in das die Listenpunkte eingefügt werden
     ul.innerHTML ="";
-    studentdata.forEach(item =>{ // iteriert durch alle 
+    studentdata.forEach(item =>{ // iteriert durch alle Objekte von studentdata
+        // erzeugt einen Listenpunkt, ein Label und einen Input
         const li = document.createElement("li");
         const label = document.createElement("label");
         const input = document.createElement("input")
+        // setzt für den Label-Inhalt und den Input-Wert den Klassennamen ein und wählt den Input-Typ checkbox
         label.innerText = item.name;
         input.value = item.name;
         input.type = "checkbox";
-        label.prepend(input);
-        li.appendChild(label);
-        ul.appendChild(li);
+        label.prepend(input); // setzt den Input vor das Label
+        li.appendChild(label); // hängt das Label an den Listenpunkt an
+        ul.appendChild(li); // 
     });
 }
 function displayClassSelector(){

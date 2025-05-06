@@ -2,7 +2,7 @@ const url= "http://localhost:8080/"
 let studentdata; 
 let currentClass;
 
-// lässt Schülerauswahl ausklappen
+// Schülerauswahl wird beim Ausklappen neu geladen
 const d = document.getElementById("student-selection");
 d.addEventListener("toggle", (e) =>{
     displayStudentSelector();
@@ -13,7 +13,7 @@ function sleep(ms) {
 }
 /**
  * erstellt eine Klassenauswahl, um die Klasse eines neuen Schülers auszuwählen
- * erzeugt eine Liste und füllt sie mit den Klassennamen aus
+ * erzeugt eine Liste und füllt sie mit den Klassennamen und dazugehörenden Checkboxen
  */
 function displayNewStudentSelector(){
     const details = document.getElementById("newStudent-selection"); 
@@ -24,18 +24,23 @@ function displayNewStudentSelector(){
         const li = document.createElement("li");
         const label = document.createElement("label");
         const input = document.createElement("input")
-        // setzt für den Label-Inhalt und den Input-Wert den Klassennamen ein und wählt den Input-Typ checkbox
+        // hängt dem Listenpunkt das Label mit Klassennamen und den Input als Checkbox an
         label.innerText = item.name;
         input.value = item.name;
         input.type = "checkbox";
-        label.prepend(input); // setzt den Input vor das Label
-        li.appendChild(label); // hängt das Label an den Listenpunkt an
-        ul.appendChild(li); // 
+        label.prepend(input);
+        li.appendChild(label);
+        ul.appendChild(li); // fügt den Listenpunkt der Liste hinzu
     });
 }
+
+/**
+ * erstellt die Klassenauswahl für einen Sammeleintrag
+ * Funktionsweise: siehe displayNewStudentSelector()
+ */
 function displayClassSelector(){
     const details = document.getElementById("class-selection");
-    const ul = details.querySelector("ul");
+    const ul = details.querySelector("ul"); 
     ul.innerHTML ="";
     studentdata.forEach(item =>{
         const li = document.createElement("li");
@@ -49,17 +54,25 @@ function displayClassSelector(){
         ul.appendChild(li);
     });
 }
+
+/**
+ * erstellt die Schülerauswahl für einen Sammeleintrag
+ * erstellt eine Liste und füllt sie mit den Schülern der ausgewählten Klassen sowie dazugehörenden Checkboxen
+ */
 function displayStudentSelector() {
-    const selectedClass = document.getElementById("class-selection");
-    const selectedOptions = selectedClass.querySelectorAll("input:checked");
-    const count =Array.from(selectedOptions, el => el.value);
+    const selectedClass = document.getElementById("class-selection"); // die Klassenauswahl für den Sammeleintrag
+    const selectedOptions = selectedClass.querySelectorAll("input:checked"); // alle ausgewählten Klassen
+    const count =Array.from(selectedOptions, el => el.value); // erstellt ein Array mit den ausgewälten Klassennamen
+    // überprüft, ob mindestens eine Klasse ausgewält wurde
     if(count.length == 0){
         console.log("Keine Klasse ausgewählt");
         return;
     }
     const details = document.getElementById("student-selection");
-    const ul = details.querySelector("ul");
+    const ul = details.querySelector("ul"); // Listenelement, in das die Listenpunkte eingefügt werden
     ul.innerHTML ="";
+    
+    // iteriert durch alle Objekte von studentdata und erstellt eine Auswahlliste aus allen Schülern, die sich in den ausgewälten Klassen befinden 
     studentdata.forEach(item => {
         if (count.includes(item.name)) {
             item.data.forEach(student =>{
@@ -76,30 +89,35 @@ function displayStudentSelector() {
         }
     });
 }
+
+/**
+ * sendet den Sammeleintrag an den Server
+ * erstellt ein JSON mit allen benötigten Daten und macht damit eine Server-Anfrage
+ */
 async function sendSammeleintrag() {
     const postJson ={};
-    const ElementName = document.getElementById("name");
-    const ElementPrice = document.getElementById("price");
-    let price = ElementPrice.value;
+    const ElementName = document.getElementById("name"); // Rechnungsname-Eingabefeld
+    const ElementPrice = document.getElementById("price"); // Preis-Eingabefeld
+    let price = ElementPrice.value; // eingegebener Preis
     const container = document.getElementById("Sammeleintrag");
     container.style.display= "none";
 
 
     const details = document.getElementById("student-selection");
-    const listInputs = details.querySelectorAll("input:checked");
-    const students = Array.from(listInputs, el=> el.value);
+    const listInputs = details.querySelectorAll("input:checked"); // alle ausgewälten Schüler
+    const students = Array.from(listInputs, el=> el.value); // erstellt ein Array mit den ausgewälten Schülernamen
     
-    const currency = container.querySelector("select").value;
+    const currency = container.querySelector("select").value; // die ausgewälte Währung
     try {
-        // Fetch currency exchange rate
+        // fetched den Wechselkurs zwischen Franken und der ausgewälten Währung von einer Web-API
         const response = await fetch(`https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_ScSlyGqkvHnE42AkxW2pSQ968he4dMmsEHqQwd2T&currencies=CHF&base_currency=${currency}`);
         const data = await response.json();
 
-        // Calculate price
+        // berechnet den Preis in Franken
         let calculations = data.data.CHF * price;
-        price = calculations.toFixed(2);
+        price = calculations.toFixed(2); // speichert Preis mit zwei Nachkommastellen als String
 
-        // Prepare JSON payload
+        // füllt das zu sendende JSON 
         let postJson = {
             name: ElementName.value,
             price: price,
@@ -108,7 +126,7 @@ async function sendSammeleintrag() {
 
         console.log(postJson);
 
-        // Send data to server
+        // sendet das JSON mit der POST-Methode an den Server
         const postResponse = await fetch(url + "Sammeleintrag", {
             method: "POST",
             headers: {
@@ -117,7 +135,7 @@ async function sendSammeleintrag() {
             body: JSON.stringify(postJson)
         });
 
-        // Evaluate server response
+        // Server-Antwort
         const verdict = await postResponse.text();
         console.log(verdict);
 
@@ -125,6 +143,11 @@ async function sendSammeleintrag() {
         console.error("Error fetching or posting data:", error);
     }
 }
+
+/**
+ * sendet die Daten eines neu erstellten Schülers an den Server
+ * erstellt ein JSON mit allen benötigten Daten und macht damit eine Server-Anfrage
+ */
 async function sendNewStudent(){
     //get params
     const ElementName = document.getElementById("newStudentName");

@@ -1,6 +1,6 @@
 const url= "http://localhost:8080/" // statischer Teil der Server-URL
 let studentdata; // zum Speichern aller Klassen, Schüler und Rechnungen, auf die der Nutzer Zugriff hat
-let currentClass; // für die Schülerauflistung ausgewälte Klasse
+let currentClass; // ausgewählte Klasse für die Schülerauflistung
 
 // Schülerauswahl wird beim Ausklappen neu geladen
 const d = document.getElementById("student-selection");
@@ -325,7 +325,7 @@ async function refresh() {
 
 // fügt an alle Elemente in startPage.html einen click-Event-Handler an
 document.addEventListener("click", async(e) => {
-    // handelt es sich beim Element um einen Knopf aus der 
+    // handelt es sich beim Element um einen "Klassen-Knopf" für die Schülerauflistung, so wird dieser Knopf blau und die Knöpfe der anderen Klassen schwarz gefärbt
     if (e.target.matches(".class-sidebar-button")) {
         document.querySelectorAll(".class-sidebar-button").forEach(item =>{item.style.color = "black"});
         e.target.style.color = "blue";

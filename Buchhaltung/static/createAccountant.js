@@ -52,7 +52,10 @@ function displayClassSelector(){
 }
 
 
-
+/**
+ * liest ausgewählte Klassen, Accountant-Name und Passwort ein und erstellt damit einen neuen Accountant-Account
+ * 
+ */
 async function createAccount(){
     const wrapper = document.querySelector(".wrapper");
     const ElementName = document.getElementById("accountantName");

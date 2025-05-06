@@ -1,5 +1,5 @@
 const url= "http://localhost:8080/"
-let studentdata;
+let studentdata; 
 let currentClass;
 
 // lässt Schülerauswahl ausklappen
@@ -11,15 +11,15 @@ d.addEventListener("toggle", (e) =>{
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-/*
- *stellt die Schülerauswahl dar
- *
+/**
+ * erstellt die Schülerauswahl
+ * erzeugt eine Liste und füllt sie mit den Schülernamen aus
  */
 function displayNewStudentSelector(){
-    const details = document.getElementById("newStudent-selection");
+    const details = document.getElementById("newStudent-selection"); 
     const ul = details.querySelector("ul");
     ul.innerHTML ="";
-    studentdata.forEach(item =>{
+    studentdata.forEach(item =>{ // iteriert durch alle 
         const li = document.createElement("li");
         const label = document.createElement("label");
         const input = document.createElement("input")
@@ -52,7 +52,7 @@ function displayStudentSelector() {
     const selectedOptions = selectedClass.querySelectorAll("input:checked");
     const count =Array.from(selectedOptions, el => el.value);
     if(count.length == 0){
-        console.log("Keine KLasse ausgewählt");
+        console.log("Keine Klasse ausgewählt");
         return;
     }
     const details = document.getElementById("student-selection");

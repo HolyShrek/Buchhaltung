@@ -1,0 +1,63 @@
+html {
+    background-color: yellowgreen;
+}
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+
+}
+.sidebar{
+    height: 100%; /* Full-height: remove this if you want "auto" height */
+    width: 160px; /* Set the width of the sidebar */
+    position: absolute; /* Fixed Sidebar (stay in place on scroll) */
+    z-index: 1; /* Stay on top */
+    top: 0; /* Stay at the top */
+    left: 0;
+    background-color: black; /* Black */
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 20px;
+}
+.logIn{
+    font-family: system-ui;
+    margin: 0;
+    width: 8cm;
+    padding: 0px 110px 10px 20px;
+    background-color: ghostwhite;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    border-radius: 1em;
+    box-shadow: 2px 2px 10px rgb(0,0,0, 0.3);
+}
+.logIn input{
+    background-color: rgb(241, 239, 225);
+    color:black;
+    width: 130%;
+    margin: 5px 0;
+    border: none;
+    border-radius: 5px;
+    padding: 8px;
+    font-size: 19;
+}
+#containerButton{
+    width: 130%;
+    display: flex;
+    justify-content: flex-end;
+
+}
+button{
+    background-color: blue;
+    margin-left: 1em;
+    color:white;
+    padding: 0.5em;
+    border: none;
+    border-radius: 5px;
+    cursor:pointer;
+}
+
+button:hover{
+    background-color:green;
+}
+

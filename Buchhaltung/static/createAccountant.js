@@ -56,28 +56,28 @@ function displayClassSelector(){
  * liest ausgewählte Klassen, Accountant-Name und Passwort ein und erstellt damit einen neuen Accountant-Account
  * 
  */
-async function createAccount(){
-    const wrapper = document.querySelector(".wrapper");
+async function createAccount(){ 
+    //Hole alle nötigen Element für Funktion
+    const wrapper = document.querySelector(".wrapper"); // grosses Element, welches alles umfasst
     const ElementName = document.getElementById("accountantName");
     const ElementPassword = document.getElementById("accountantPassword");
     const Success = document.getElementById("response");
     const NewAccount = document.getElementById("create");
     const ElementSelectionClass = document.getElementById("class-selection");
 
-    //let classes = Array.from(ElementSelectionClass.selectedOptions).map(option => option.value);
-    const selected = ElementSelectionClass.querySelectorAll("input:checked");
-    const classes = Array.from(selected, el => el.value);
+    const selected = ElementSelectionClass.querySelectorAll("input:checked"); // hol alle Klassen auf welche der neue Accountant Zugriff hat
+    const classes = Array.from(selected, el => el.value); // schreibe Alle Werte in ein Array
     console.log(classes);
-    let postJson = {};
+    let postJson = {}; //Rückgabe
     postJson.class = classes;
     postJson.name = ElementName.value;
-    if(ElementPassword.value != wrapper.querySelector("input[placeholder='PasswortBestätigen']").value){
+    if(ElementPassword.value != wrapper.querySelector("input[placeholder='PasswortBestätigen']").value){//schaue ob die beiden neuen Passwörter gleich sind
         Success.textContent="Falsches Passwort";
         return;
     }
-    postJson.password = await digestMessage(ElementPassword.value);
+    postJson.password = await digestMessage(ElementPassword.value); //sha251 Passwort wird gehashed
 
-    const response = await fetch(url + "newAccountant",{
+    const response = await fetch(url + "newAccountant",{ //sendet daten an Server
         method: "POST",
             headers:{
                  "Content-Type": "application/json"
@@ -86,7 +86,7 @@ async function createAccount(){
     });
     const verdict = await response.text();//evaluate Server Response
     console.log(verdict);
-    if(verdict == "update Successfull"){
+    if(verdict == "update Successfull"){ //wenn das Urteil positiv ist, setze alle Werte zurück auf leer
         ElementName.value = "";
         ElementPassword.value = "";
         wrapper.querySelector("input[placeholder='PasswortBestätigen']").value= "";

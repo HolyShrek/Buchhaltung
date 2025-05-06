@@ -2,7 +2,7 @@ const url= "http://localhost:8080/"
 let studentdata;
 let currentClass;
 
-
+// lässt Schülerauswahl ausklappen
 const d = document.getElementById("student-selection");
 d.addEventListener("toggle", (e) =>{
     displayStudentSelector();
@@ -11,6 +11,10 @@ d.addEventListener("toggle", (e) =>{
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+/*
+ *stellt die Schülerauswahl dar
+ *
+ */
 function displayNewStudentSelector(){
     const details = document.getElementById("newStudent-selection");
     const ul = details.querySelector("ul");

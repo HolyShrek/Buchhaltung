@@ -1,6 +1,6 @@
 const url= "http://localhost:8080/"
-let studentdata; 
-let currentClass;
+let studentdata; // zum speichern der Schüler und Klassen aus einer Server-Anfrage
+let currentClass; 
 
 // Schülerauswahl wird beim Ausklappen neu geladen
 const d = document.getElementById("student-selection");
@@ -150,41 +150,58 @@ async function sendSammeleintrag() {
  */
 async function sendNewStudent(){
     //get params
-    const ElementName = document.getElementById("newStudentName");
-    const details = document.getElementById("newStudent-selection");
+    const ElementName = document.getElementById("newStudentName"); // Schülername-Eingabe
+    const details = document.getElementById("newStudent-selection"); // Klassenauswahl für neuen Schüler
     const container = document.getElementById("newStudent");
     container.style.display="none";
-    //const ElementCheckbox = document.getElementById("deleteStudent");
-    const listInput = details.querySelectorAll("input:checked");
-    const name = ElementName.value; 
-    const classes = Array.from(listInput, el=> el.value);
-    //send params
+    
+    const listInput = details.querySelectorAll("input:checked"); // ausgewälte Klassen
+    const name = ElementName.value; // Schülername
+    const classes = Array.from(listInput, el=> el.value); // Array aus ausgewälten Klassennamen
+    
+    // sendet Schülername und Klasse an Server
     const response = await fetch(url + "newStudent/" + name + "/" + classes[0]);
     console.log(response);
 }
+
+/**
+ * initialisiert beide Klassenauswahlen
+ * macht eine Serveranfrage für alle Schüler- und Klassennamen (auf die der Accountant Zugriff hat)
+ */
 async function init() {
-    const responseSaldo = await fetch(url+"students/Saldo");
+    const responseSaldo = await fetch(url+"students/Saldo"); // Serveranfrage
     const data = await responseSaldo.json();
-    studentdata= data;
-    displayClassSelector();
-    displayNewStudentSelector();
-    displayStudents(data);
+    studentdata= data; // speichert die erhaltenen Schüler- und Klassennamen in globaler Variable
+    displayClassSelector(); // initialisiert Klassenauswahl für Sammeleintrag
+    displayNewStudentSelector(); // initialisert Klassenauswahl für neuen Schüler
+    displayStudents(data); // initialisiert Klassenauswahl für Schülerdarstellung
     refresh();
 }
+
+/**
+ * erstellt Klassenauswahl für die Schülerdarstellung
+ * erzeugt eine Liste aus Knöpfen mit Klassennamen
+ * @param {object} a - Objekt, dass Klassen enthält
+ */
 function displayStudents(a){
-    a.forEach(classes=>{
-        const list = document.querySelector("div.class-sidebar ul");
-        //button
+    a.forEach(classes=>{ // iteriert durch alle Klassen
+        const list = document.querySelector("div.class-sidebar ul"); // zu füllende Liste
+        // erzeugt Knopf mit Klassennamen
         const button= document.createElement("button");
         button.className="class-sidebar-button"
         button.innerText=classes.name;
-        //listenpunkt
+        // erzeugt Listenpunkt
         const li = document.createElement("li");
-        //anhängen
+        // hängt Listenpunkt an Liste an
         li.appendChild(button);
         list.appendChild(li);
     });
 }
+
+/**
+ * initialisiert beide Klassenauswahlen
+ * macht eine Serveranfrage für alle Schüler- und Klassennamen (auf die der Accountant Zugriff hat)
+ */
 async function calculateCurrency(){
     const container = document.getElementById("currencyCalculater");
     container.style.display="none";
